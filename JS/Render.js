@@ -1,3 +1,4 @@
+import * as M from "./Math/Mat.js"
 import * as Canvas from "./Canvas.js"
 
 const C = Canvas.c
@@ -58,11 +59,11 @@ export function render_tesseract_quads_orthographic(style, vertices4, indices) {
 
 /**
  * @param {string} text
- * @param {[number, number, number]} position3
+ * @param {M.Vector3} position3
  * @param {number} size
  * @param {string} color
- * @param {string} textAlign
- * @param {string} textBaseline
+ * @param {CanvasTextAlign} textAlign
+ * @param {CanvasTextBaseline} textBaseline
  */
 export function render_spatial_text(text, position3, size, color, textAlign, textBaseline) {
 	const [x, y, z] = position3
@@ -81,11 +82,15 @@ export function render_spatial_text(text, position3, size, color, textAlign, tex
 
 	C.fillStyle = color
 	C.strokeStyle = Canvas.DEFAULT_COLOR
-	C.strokeText(text, U * x * az, -U * y * az);
+	C.strokeText(text, U * x * az, -U * y * az)
 	C.fillText(text, U * x * az, -U * y * az)
 }
 
-export function render_tesseract_quads_perspective(vertices3, indices) {
+/**
+ * @param {number[]} vertices3
+ * @param {number[]} indices
+ */
+export function render_tesseract_quads_perspective(vertices3, indices, color) {
 	const U = Canvas.min
 
 	for (let i = 0; i < indices.length / 4; i++) {
@@ -128,7 +133,7 @@ export function render_tesseract_quads_perspective(vertices3, indices) {
 		// if (az > aw || bz > bw || cz > cw || dz > dw)
 		// 	continue
 
-		C.fillStyle = "#FFFFFF44"
+		C.fillStyle = color
 
 		C.beginPath()
 		C.moveTo(U * ax, -U * ay)
@@ -221,7 +226,7 @@ function computeCode(x, y) {
  * @param {number} y1
  * @param {number} x2
  * @param {number} y2
- * @returns {[number, number, number, number] | null}
+ * @returns {?M.Vector4}
  */
 function cohenSutherlandClip(x1, y1, x2, y2) {
 	// Compute region codes for P1, P2

@@ -81,7 +81,6 @@ export function norm5(u) {
 
 export function proj4(u, v) {
     const v_w = 1 / v[3]
-    console.log(v_w)
 	const scale = v_w * dot3(v, u) / dot3(u, u)
 	return [
 		scale * u[0],
@@ -259,10 +258,7 @@ export function look_along_4(position, direction) {
     else
     new_x = X4, new_y = Y4
 
-    console.log(e0, new_x)
-
     const u1 = sub4(new_x, proj4(e0, new_x))
-    console.log(u1)
 	const u2 = sub4_2(new_y, proj4(e0, new_y), proj4(u1, new_y))
 
     const e1 = norm4(u1)
