@@ -1,5 +1,25 @@
+if (!navigator.gpu) {
+    throw new Error("WebGPU not supported on this browser.")
+}
+
+export const adapter = await navigator.gpu.requestAdapter()
+if (!adapter) {
+  throw new Error("No appropriate GPUAdapter found.")
+}
+
+export const device = await adapter.requestDevice();
+
 export const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("Canvas"))
-export const c = canvas.getContext("2d")
+export const c = canvas.getContext("webgpu")
+
+/** @type {} */
+export const cformat = navigator.gpu.getPreferredCanvasFormat()
+c.configure({
+  device: device,
+  format: cformat,
+})
+
+export const encoder = device.createCommandEncoder()
 
 export const DEFAULT_COLOR = "#111122"
 
@@ -57,8 +77,8 @@ update_units(canvas)
 export function update(color) {
     update_units(canvas)
 
-    c.fillStyle = color
-    c.fillRect(0, 0, cw, ch)
+    // c.fillStyle = color
+    // c.fillRect(0, 0, cw, ch)
 
-    c.translate(cw/2, ch/2)
+    // c.translate(cw/2, ch/2)
 }

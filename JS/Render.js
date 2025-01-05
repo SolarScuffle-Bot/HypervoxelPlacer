@@ -1,6 +1,28 @@
 import * as M from "./Math/Mat.js"
 import * as Canvas from "./Canvas.js"
 
+const pass = Canvas.encoder.beginRenderPass({
+    colorAttachments: [{
+       view: c.getCurrentTexture().createView(),
+       loadOp: "clear",
+       clearValue: [17 / 255, 17 / 255, 34 / 255, 1],
+       storeOp: "store",
+    }]
+})
+
+pass.end()
+
+const commandBuffer = encoder.finish()
+
+device.queue.submit([commandBuffer]);
+
+const vertexBuffer = device.createBuffer({
+	label: "Cell vertices",
+	size: vertices.byteLength,
+	usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  });
+
+
 const C = Canvas.c
 
 export function render_tesseract_quads_orthographic(style, vertices4, indices) {

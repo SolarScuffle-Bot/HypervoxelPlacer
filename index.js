@@ -91,10 +91,23 @@ const ORTHOGONAL5 = [
 	0, 0, 0, 0, 1
 ]
 
-let PROJECT_4D_TO_3D, PROJECT_3D_TO_2D
-let CAMERA5, CAMERA4
-let CAMERA5_INVERSE, CAMERA4_INVERSE
+/** @type {M.Matrix5} */
+let PROJECT_4D_TO_3D
+/** @type {M.Matrix4} */
+let PROJECT_3D_TO_2D
+/** @type {M.Matrix5} */
+let CAMERA5
+/** @type {M.Matrix4} */
+let CAMERA4
+/** @type {M.Matrix5} */
+let CAMERA5_INVERSE
+/** @type {M.Matrix4} */
+let CAMERA4_INVERSE
 
+/**
+ * @param {M.Vector4} position4
+ * @param {string} color
+ */
 function render_filled_tesseract(position4, color) {
 	const TRANSLATE = M5.translate(position4)
 	const TESSERACT_INDICES = Vertices.TESSERACT_QUAD_INDICES
