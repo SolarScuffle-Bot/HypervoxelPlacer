@@ -1,17 +1,15 @@
-import * as M from "./Mat.js"
-
 /**
- * @param {M.Vector3} u
- * @param {M.Vector3} v
+ * @param {[number, number, number]} u
+ * @param {[number, number, number]} v
  */
 export function dot(u, v) {
 	return u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
 }
 
 /**
- * @param {M.Vector3} u
- * @param {M.Vector3} v
- * @returns {M.Vector3}
+ * @param {[number, number, number]} u
+ * @param {[number, number, number]} v
+ * @returns {[number, number, number]}
  */
 export function cross(u, v) {
 	return [
@@ -22,15 +20,15 @@ export function cross(u, v) {
 }
 
 /**
- * @param {M.Vector3} u
+ * @param {[number, number, number]} u
  */
 export function mag(u) {
 	return Math.hypot(u[0], u[1], u[2])
 }
 
 /**
- * @param {M.Vector3} u
- * @returns {M.Vector3}
+ * @param {[number, number, number]} u
+ * @returns {[number, number, number]}
  */
 export function norm(u) {
 	const m = 1 / mag(u)
@@ -42,9 +40,9 @@ export function norm(u) {
 }
 
 /**
- * @param {M.Vector3} u
- * @param {M.Vector3} v
- * @returns {M.Vector3}
+ * @param {[number, number, number]} u
+ * @param {[number, number, number]} v
+ * @returns {[number, number, number]}
  */
 export function proj(u, v) {
 	const scale = dot(v, u) / dot(u, u)
@@ -56,9 +54,9 @@ export function proj(u, v) {
 }
 
 /**
- * @param {M.Vector3} u
+ * @param {[number, number, number]} u
  * @param {number} s
- * @returns {M.Vector3}
+ * @returns {[number, number, number]}
  */
 export function muls(u, s) {
 	return [
@@ -69,9 +67,9 @@ export function muls(u, s) {
 }
 
 /**
- * @param {M.Vector3} u
- * @param {M.Vector3} v
- * @returns {M.Vector3}
+ * @param {[number, number, number]} u
+ * @param {[number, number, number]} v
+ * @returns {[number, number, number]}
  */
 export function sub(u, v) {
 	return [
@@ -82,10 +80,10 @@ export function sub(u, v) {
 }
 
 /**
- * @param {M.Vector3} u
- * @param {M.Vector3} v
- * @param {M.Vector3} w
- * @returns {M.Vector3}
+ * @param {[number, number, number]} u
+ * @param {[number, number, number]} v
+ * @param {[number, number, number]} w
+ * @returns {[number, number, number]}
  */
 export function sub_2(u, v, w) {
 	return [
@@ -96,11 +94,11 @@ export function sub_2(u, v, w) {
 }
 
 /**
- * @param {M.Vector3} u
- * @param {M.Vector3} v
- * @param {M.Vector3} w
- * @param {M.Vector3} x
- * @returns {M.Vector3}
+ * @param {[number, number, number]} u
+ * @param {[number, number, number]} v
+ * @param {[number, number, number]} w
+ * @param {[number, number, number]} x
+ * @returns {[number, number, number]}
  */
 export function sub_3(u, v, w, x) {
 	return [
@@ -111,22 +109,22 @@ export function sub_3(u, v, w, x) {
 }
 
 /**
- * @type {M.Vector3}
+ * @type {[number, number, number]}
  */
 export const X = [1, 0, 0]
 /**
- * @type {M.Vector3}
+ * @type {[number, number, number]}
  */
 export const Y = [0, 1, 0]
 /**
- * @type {M.Vector3}
+ * @type {[number, number, number]}
  */
 export const Z = [0, 0, 1]
 /**
- * @type {M.Vector3}
+ * @type {[number, number, number]}
  */
 export const ZERO = [0, 0, 0]
 /**
- * @type {M.Vector3}
+ * @type {[number, number, number]}
  */
 export const ONE = [1, 1, 1]

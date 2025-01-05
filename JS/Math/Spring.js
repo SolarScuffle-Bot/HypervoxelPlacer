@@ -3,12 +3,6 @@ import * as M from './Mat.js';
 
 export const handledSprings = []
 
-/**
- * @template {number | number[]} T
- * @param {T} initialPosition
- * @param {number} frequency
- * @param {number} damping
- */
 export function create(initialPosition, frequency, damping) {
     const velocity = (typeof initialPosition === 'number') ? 0 : new Array(initialPosition.length).fill(0);
     const spring = {
@@ -22,13 +16,6 @@ export function create(initialPosition, frequency, damping) {
 	return spring
 }
 
-/**
- * @param {number} dt
- * @param {number} position
- * @param {number} velocity
- * @param {number} frequency
- * @param {number} damping
- */
 export function rungeKuttaNumber(dt, position, velocity, frequency, damping) {
     const w = frequency;
     const d = -2 * damping;
@@ -54,13 +41,6 @@ export function rungeKuttaNumber(dt, position, velocity, frequency, damping) {
     ];
 }
 
-/**
- * @param {number} dt
- * @param {number[]} position
- * @param {number[]} velocity
- * @param {number} frequency
- * @param {number} damping
- */
 export function rungeKuttaArray(dt, position, velocity, frequency, damping) {
     const w = frequency;
     const d = -2 * damping;
@@ -86,22 +66,19 @@ export function rungeKuttaArray(dt, position, velocity, frequency, damping) {
     ];
 }
 
-/**
- * @param {number} dt
- */
 export function updateAllSprings(dt) {
 	dt = Math.min(dt, 1 / 60)
 
     for (const spring of handledSprings) {
-        const g = spring.target
-        const isNumber = typeof spring.position === 'number'
-        const position = isNumber ? spring.position - g : M.sub(spring.position, g)
+        const g = spring.target;
+        const isNumber = typeof spring.position === 'number';
+        const position = isNumber ? spring.position - g : M.sub(spring.position, g);
 
         const [newPosition, newVelocity] = isNumber
-            ? rungeKuttaNumber(dt, /**@type {number}*/(position), spring.velocity, spring.frequency, spring.damping)
-            : rungeKuttaArray(dt, /**@type {number[]}*/(position), spring.velocity, spring.frequency, spring.damping);
+            ? rungeKuttaNumber(dt, position, spring.velocity, spring.frequency, spring.damping)
+            : rungeKuttaArray(dt, position, spring.velocity, spring.frequency, spring.damping);
 
-        spring.position = isNumber ? newPosition + g : M.add(/**@type {number[]}*/(newPosition), g);
+        spring.position = isNumber ? newPosition + g : M.add(newPosition, g);
         spring.velocity = newVelocity;
     }
 }

@@ -1,4 +1,3 @@
-import * as M from "./JS/Math/Mat.js"
 import * as Canvas from "./JS/Canvas.js"
 import * as M5 from "./JS/Math/Mat5D.js"
 import * as M4 from "./JS/Math/Mat4D.js"
@@ -6,7 +5,6 @@ import * as M3 from "./JS/Math/Mat3D.js"
 import * as Vertices from "./JS/Vertices.js"
 import * as Render from "./JS/Render.js"
 import * as Spring from "./JS/Math/Spring.js"
-import * as GameState from "./JS/GameState.js"
 import * as Ui from "./JS/Ui.js"
 
 const C = Canvas.c
@@ -28,7 +26,13 @@ const C = Canvas.c
 
 /**
  * 5×5 perspective for 4D -> "clip" with +W forward
- * @type {M.Matrix5}
+ * @type {[
+* 	number, number, number, number, number,
+* 	number, number, number, number, number,
+* 	number, number, number, number, number,
+* 	number, number, number, number, number,
+* 	number, number, number, number, number,
+* ]}
 */
 const PERSPECTIVE5 = (() => {
 	const FOV = Math.PI / 2
@@ -51,7 +55,12 @@ const PERSPECTIVE5 = (() => {
 
 /**
  * 4×4 perspective for 3D -> "clip" with +Z forward
- * @type {M.Matrix4}
+ * @type {[
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]}
 */
 const PERSPECTIVE4 = (() => {
 	const FOV = Math.PI / 2
@@ -71,7 +80,12 @@ const PERSPECTIVE4 = (() => {
 })()
 
 /**
- * @type {M.Matrix4}
+ * @type {[
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]}
  */
 const ORTHOGONAL4 = [
 	1, 0, 0, 0,
@@ -81,7 +95,13 @@ const ORTHOGONAL4 = [
 ]
 
 /**
- * @type {M.Matrix5}
+ * @type {[
+ * 	number, number, number, number, number,
+ * 	number, number, number, number, number,
+ * 	number, number, number, number, number,
+ * 	number, number, number, number, number,
+ * 	number, number, number, number, number,
+ * ]}
  */
 const ORTHOGONAL5 = [
 	1, 0, 0, 0, 0,
@@ -91,11 +111,49 @@ const ORTHOGONAL5 = [
 	0, 0, 0, 0, 1
 ]
 
+const CURRENT_CAMERA_4 = 0
+const CURRENT_CAMERA_5 = 1
+
+const CURRENT_PROJECTION_PERSPECTIVE = 0
+const CURRENT_PROJECTION_ORTHOGONAL = 1
+
+let currentProjection4 = CURRENT_PROJECTION_PERSPECTIVE
+let currentProjection5 = CURRENT_PROJECTION_PERSPECTIVE
+let currentCamera = CURRENT_CAMERA_4
+
+let xy3 = Spring.create(Math.PI / 3, 40, 0.5)
+let yz3 = Spring.create(Math.PI / 3, 40, 0.5)
+let distance3 = Spring.create(6, 20, 0.75)
+
+let xy4 = Spring.create(0, 40, 0.5)
+let yz4 = Spring.create(0, 40, 0.5)
+let zx4 = Spring.create(0, 20, 0.75)
+let wx4 = Spring.create(0, 40, 0.5)
+let wy4 = Spring.create(0, 40, 0.5)
+let wz4 = Spring.create(0, 20, 0.75)
+
+let focus4 = Spring.create(M4.ZERO, 40, 0.75)
+let distance4 = Spring.create(2, 20, 0.75)
+
+let use_hopf_coordinates = false
+let zeta1 = 0
+let zeta2 = 0
+let eta = Spring.create(Math.PI / 4, 20, 0.75)
+
+let renderOriginAxes = true
+let render4DCursor = true
+let renderCoordinateLabels = false
+let renderUi = true
+
+let cameraDisplaySizeSpring = Spring.create(0, 10, 0.5)
+
+let hypervoxels = new Map()
+
 let PROJECT_4D_TO_3D, PROJECT_3D_TO_2D
 let CAMERA5, CAMERA4
 let CAMERA5_INVERSE, CAMERA4_INVERSE
 
-function render_filled_tesseract(position4, color) {
+function render_filled_tesseract(position4) {
 	const TRANSLATE = M5.translate(position4)
 	const TESSERACT_INDICES = Vertices.TESSERACT_QUAD_INDICES
 	const TESSERACT_VERTICES = M5.mul_5x5_5xn(TRANSLATE, Vertices.TESSERACT_VERTICES5)
@@ -104,11 +162,11 @@ function render_filled_tesseract(position4, color) {
 	const VERTICES_4D = M4.mul_4x4_4xn(PROJECT_3D_TO_2D, M5.trim_5xn_4xn(VERTICES_5D))
 	const VERTICES_3D = M4.trim_4xn_3xn(VERTICES_4D)
 	const sortedIndices = Vertices.sort_indices_by_depth(SHOWING_INDICES, VERTICES_3D)
-	Render.render_tesseract_quads_perspective(VERTICES_3D, sortedIndices, color)
+	Render.render_tesseract_quads_perspective(VERTICES_3D, sortedIndices)
 }
 
 /**
- * @param {M.Vector4} position4
+ * @param {[number, number, number, number]} position4
  */
 function draw_axes4(position4, axisLength = 1) {
 	const [x, y, z, w] = position4
@@ -185,7 +243,7 @@ function draw_axes4(position4, axisLength = 1) {
 	const sortedIndices = Vertices.sort_indices_by_depth(AXIS_INDICES, axes3d)
 	Render.render_lines(axes3d, sortedIndices, AXIS_LINE_COLORS)
 
-	if (Ui.renderCoordinateLabels) {
+	if (renderCoordinateLabels) {
 		Render.render_spatial_text("X", [axes3d[3], axes3d[4], axes3d[5]], 24, "#F00", "center", "bottom")
 		Render.render_spatial_text("Y", [axes3d[6], axes3d[7], axes3d[8]], 24, "#0F0", "center", "bottom")
 		Render.render_spatial_text("Z", [axes3d[9], axes3d[10], axes3d[11]], 24, "#00F", "center", "bottom")
@@ -194,48 +252,46 @@ function draw_axes4(position4, axisLength = 1) {
 }
 
 let t = 0
-/**
- * @param {number} dt
- */
 function frame(dt) {
 	{
-		const distance4d = -GameState.distance4.position
-		if (GameState.use_hopf_coordinates) {
-			const etaPosition = GameState.eta.position
-			CAMERA5 = M5.lookAt([
-				distance4d * Math.cos(GameState.zeta1) * Math.sin(etaPosition),
-				distance4d * Math.sin(GameState.zeta1) * Math.sin(etaPosition),
-				distance4d * Math.cos(GameState.zeta2) * Math.cos(etaPosition),
-				distance4d * Math.sin(GameState.zeta2) * Math.cos(etaPosition),
-			], M4.ZERO)
+		const distance4d = -distance4.position
+		if (use_hopf_coordinates) {
+			const etaPosition = eta.position
+			const hopf = [
+				distance4d * Math.cos(zeta1) * Math.sin(etaPosition),
+				distance4d * Math.sin(zeta1) * Math.sin(etaPosition),
+				distance4d * Math.cos(zeta2) * Math.cos(etaPosition),
+				distance4d * Math.sin(zeta2) * Math.cos(etaPosition),
+			]
+			CAMERA5 = M5.lookAt(hopf, M4.ZERO)
 		} else {
 			CAMERA5 = M5.mul_5x5s(
-				M5.translate(GameState.focus4.position),
-				M5.rotate_xy(GameState.xy4.position),
-				M5.rotate_yz(GameState.yz4.position),
-				M5.rotate_zx(GameState.zx4.position),
-				M5.rotate_wz(GameState.wz4.position),
-				M5.rotate_wy(GameState.wy4.position),
-				M5.rotate_wx(GameState.wx4.position),
+				M5.translate(focus4.position),
+				M5.rotate_xy(xy4.position),
+				M5.rotate_yz(yz4.position),
+				M5.rotate_zx(zx4.position),
+				M5.rotate_wz(wz4.position),
+				M5.rotate_wy(wy4.position),
+				M5.rotate_wx(wx4.position),
 				M5.lookAt([distance4d, distance4d, distance4d, distance4d], M4.ZERO)
 			)
 		}
 
-		const distance3d = GameState.distance3.position
+		const distance3d = distance3.position
 		CAMERA4 = M4.mul_4x4s(
-			M4.rotate_xy(GameState.xy3.position),
-			M4.rotate_yz(GameState.yz3.position),
+			M4.rotate_xy(xy3.position),
+			M4.rotate_yz(yz3.position),
 			M4.lookAt([0, 0, distance3d], M3.ZERO)
 		)
 
 		CAMERA5_INVERSE = M5.inverse(CAMERA5)
 		CAMERA4_INVERSE = M4.inverse(CAMERA4)
 
-		PROJECT_3D_TO_2D = M4.mul_4x4(GameState.currentProjection4 == GameState.CURRENT_PROJECTION_PERSPECTIVE ? PERSPECTIVE4 : ORTHOGONAL4, CAMERA4_INVERSE)
-		PROJECT_4D_TO_3D = M5.mul_5x5(GameState.currentProjection5 == GameState.CURRENT_PROJECTION_PERSPECTIVE ? PERSPECTIVE5 : ORTHOGONAL5, CAMERA5_INVERSE)
+		PROJECT_3D_TO_2D = M4.mul_4x4(currentProjection4 == CURRENT_PROJECTION_PERSPECTIVE ? PERSPECTIVE4 : ORTHOGONAL4, CAMERA4_INVERSE)
+		PROJECT_4D_TO_3D = M5.mul_5x5(currentProjection5 == CURRENT_PROJECTION_PERSPECTIVE ? PERSPECTIVE5 : ORTHOGONAL5, CAMERA5_INVERSE)
 	}
 
-	if (Ui.renderOriginAxes) {
+	if (renderOriginAxes) {
 		const AXIS_LENGTH = 1
 		const AXIS_VERTICES = [
 			0, 0, 0, 1,
@@ -287,7 +343,7 @@ function frame(dt) {
 	}
 
 
-	if (Ui.render4DCursor) {
+	if (render4DCursor) {
 		const AXIS_VERTICES = [
 			+0.5, +0, +0, +0, 1,
 			-0.5, +0, +0, +0, 1,
@@ -310,29 +366,200 @@ function frame(dt) {
 		]
 
 		const LINE_COLORS = [
-			"#F99",
-			"#9F9",
-			"#99F",
-			"#FF9",
+			"#FFF",
+			"#FFF",
+			"#FFF",
+			"#FFF",
 		]
 
-		const axes4d = M5.trim_5xn_4xn(M5.mul_5x5_5xns(PROJECT_4D_TO_3D, M5.translate(GameState.focus4.target), AXIS_VERTICES))
+		const axes4d = M5.trim_5xn_4xn(M5.mul_5x5_5xns(PROJECT_4D_TO_3D, M5.translate(focus4.target), AXIS_VERTICES))
 		const axes3d = M4.trim_4xn_3xn(M4.mul_4x4_4xn(PROJECT_3D_TO_2D, axes4d))
 		const sortedIndices = Vertices.sort_indices_by_depth(AXIS_INDICES, axes3d)
 		Render.render_lines(axes3d, sortedIndices, LINE_COLORS)
 	} else {
-		draw_axes4(GameState.focus4.target, 10)
+		draw_axes4(focus4.target, 10)
 	}
 
-	// TODO: We have reached the point where individual pixels need to be Z-indexed, which is currently not possible with Canvas.
-	// This means we need to properly move to using WebGPU now, which means the giant rewrite we were trying to avoid is here.
-	// That said, it will be nice to finally get it out of the way, but this will take the entire weekend or longer since we are newbies.
-	for (const [hash, data] of GameState.hypervoxels) {
-		render_filled_tesseract(data.position, data.color)
+	for (const [hash, tesseractPosition] of hypervoxels) {
+		render_filled_tesseract(tesseractPosition)
 	}
 
-	if (Ui.renderUi) {
-		Ui.renderAll()
+	if (!renderUi) return;
+
+	C.fillStyle = "#FFF"
+	C.strokeStyle = Canvas.DEFAULT_COLOR
+	C.lineWidth = 10
+
+	const PADDING = 45
+
+	C.textBaseline = "top"
+	C.textAlign = "left"
+
+	{
+		const fontSize = Math.round(0.048 * Canvas.min) + cameraDisplaySizeSpring.position
+		C.font = (currentCamera == CURRENT_CAMERA_5 ? "italic " : "") + `${fontSize}px cambria`
+
+		const text = `${currentCamera == CURRENT_CAMERA_4 ? "3D Camera" : "4D Camera"}`
+		const x = -Canvas.uw * PADDING
+		const y = -Canvas.uh * (PADDING)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+	}
+
+	C.font = `${0.024 * Canvas.min}px cambria`
+	C.textAlign = "right"
+
+	let topRightListOffset = 0
+
+	{
+		const text = `Toggle UI [1]`
+		const x = Canvas.uw * PADDING
+		const y = -Canvas.uh * (PADDING - topRightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		topRightListOffset += 5
+	}
+
+	{
+		const text = `Toggle Origin Axes [2]`
+		const x = Canvas.uw * PADDING
+		const y = -Canvas.uh * (PADDING - topRightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		topRightListOffset += 5
+	}
+
+	{
+		const text = `Toggle Cursor [3]`
+		const x = Canvas.uw * PADDING
+		const y = -Canvas.uh * (PADDING - topRightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		topRightListOffset += 5
+	}
+
+	{
+		const text = `Show Axis Labels [4]`
+		const x = Canvas.uw * PADDING
+		const y = -Canvas.uh * (PADDING - topRightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		topRightListOffset += 5
+	}
+
+	{
+		const text = `Save [9]`
+		const x = Canvas.uw * PADDING
+		const y = -Canvas.uh * (PADDING - topRightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		topRightListOffset += 5
+	}
+
+	{
+		const text = `Load [0]`
+		const x = Canvas.uw * PADDING
+		const y = -Canvas.uh * (PADDING - topRightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		topRightListOffset += 5
+	}
+
+	C.font = `${Math.round(0.036 * Canvas.min)}px cambria`
+	C.textBaseline = "bottom"
+	C.textAlign = "left"
+
+	let leftListOffset = 0
+
+	{
+		const text = `[LeftCtrl] Reorient 4D`
+		const x = -Canvas.uw * PADDING
+		const y = Canvas.uh * (PADDING - leftListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		leftListOffset += 5
+	}
+
+	if (currentCamera == CURRENT_CAMERA_5) {
+		const text = `[Shift] Change Rotations`
+		const x = -Canvas.uw * PADDING
+		const y = Canvas.uh * (PADDING - leftListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		leftListOffset += 5
+	}
+
+	{
+		const text = `[Space] ${hypervoxels.get(focus4.target.toString()) ? "Delete" : "Place"}`
+		const x = -Canvas.uw * PADDING
+		const y = Canvas.uh * (PADDING - leftListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		leftListOffset += 5
+	}
+
+	{
+		const text = `[Z] Switch Camera`
+		const x = -Canvas.uw * PADDING
+		const y = Canvas.uh * (PADDING - leftListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		leftListOffset += 5
+	}
+
+	C.textAlign = "center"
+
+	{
+		C.font = `${Math.round(0.048 * Canvas.min)}px cambria`
+		C.textAlign = "center"
+		C.textBaseline = "bottom"
+
+		const text = `(${focus4.target[0]}, ${focus4.target[1]}, ${focus4.target[2]}, ${focus4.target[3]})`
+		const x = 0
+		const y = Canvas.uh * PADDING
+		C.strokeText(text, x, y);
+		C.fillText(text, x, y)
+	}
+
+	{
+		C.font = `${Math.round(0.036 * Canvas.min)}px cambria`
+
+		const text = `${(Math.round(distance4.position * 1000) / 1000).toFixed(3)}`
+		const x = 0
+		const y = Canvas.uh * (PADDING - 5)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+	}
+
+	C.textAlign = "right"
+
+	let rightListOffset = 0
+
+	{
+		const text = `Recenter [RightCtrl]`
+		const x = Canvas.uw * PADDING
+		const y = Canvas.uh * (PADDING - rightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		rightListOffset += 5
+	}
+
+	{
+		const text = `Move [ADWSEQRF]`
+		const x = Canvas.uw * PADDING
+		const y = Canvas.uh * (PADDING - rightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		rightListOffset += 5
+	}
+
+	{
+		const text = `Zoom 4D [↑↓]`
+		const x = Canvas.uw * PADDING
+		const y = Canvas.uh * (PADDING - rightListOffset)
+		C.strokeText(text, x, y)
+		C.fillText(text, x, y)
+		rightListOffset += 5
 	}
 
 	t += dt
@@ -364,274 +591,342 @@ if (LOOP) {
 	frame(delta_time)
 }
 
-// let lastMouse = [0, 0]
+let mouse = [0, 0]
+let lastMouse = [0, 0]
 
-// let dragging = false
-// document.addEventListener('mousedown', e => {
-// 	dragging = true
-// })
-// document.addEventListener('mouseup', e => {
-// 	dragging = false
-// })
+let dragging = false
+document.addEventListener('mousedown', e => {
+	dragging = true
+})
+document.addEventListener('mouseup', e => {
+	dragging = false
+})
 
-// const KEYS_DOWN = new Set()
+const KEYS_DOWN = new Set()
 
-// let shiftedAlready = false
-// let zAlready = false
-// document.addEventListener('keydown', e => {
-// 	if (e.code == "KeyZ") {
-// 		if (!zAlready) {
-// 			zAlready = true
-// 			GameState.currentCamera = GameState.currentCamera == GameState.CURRENT_CAMERA_4 ? GameState.CURRENT_CAMERA_5 : GameState.CURRENT_CAMERA_4
-// 			SUCCESS_SOUND.play()
-// 			cameraDisplaySizeSpring.velocity = 50
+class Sound {
+	/**
+	 * @param {string} path
+	 */
+	constructor(path, replayTime = 0) {
+		this.audio = new Audio(path)
+		this.replayTime = replayTime
+	}
 
-// 			if (shiftedAlready && currentCamera == CURRENT_CAMERA_4) {
-// 				CLICK_SOUNDS[0].play()
-// 			}
+	play() {
+		if (!this.audio.paused) {
+			this.audio.currentTime = this.replayTime
+		} else {
+			this.audio.play()
+		}
+	}
 
-// 			if (shiftedAlready && currentCamera == CURRENT_CAMERA_5) {
-// 				shiftedAlready = true
-// 				CLICK_SOUNDS[0].play()
-// 			}
-// 		}
-// 	} else if (e.code == "KeyH") {
-// 		use_hopf_coordinates = !use_hopf_coordinates
-// 	} else if (e.code == "KeyD") {
-// 		focus4.target = M4.add(focus4.target, [1, 0, 0, 0])
-// 		playRandomSoundFrom(MOVE_SOUNDS)
-// 	} else if (e.code == "KeyA") {
-// 		focus4.target = M4.add(focus4.target, [-1, 0, 0, 0])
-// 		playRandomSoundFrom(MOVE_SOUNDS)
-// 	} else if (e.code == "KeyW") {
-// 		focus4.target = M4.add(focus4.target, [0, 1, 0, 0])
-// 		playRandomSoundFrom(MOVE_SOUNDS)
-// 	} else if (e.code == "KeyS") {
-// 		focus4.target = M4.add(focus4.target, [0, -1, 0, 0])
-// 		playRandomSoundFrom(MOVE_SOUNDS)
-// 	} else if (e.code == "KeyE") {
-// 		focus4.target = M4.add(focus4.target, [0, 0, 1, 0])
-// 		playRandomSoundFrom(MOVE_SOUNDS)
-// 	} else if (e.code == "KeyQ") {
-// 		focus4.target = M4.add(focus4.target, [0, 0, -1, 0])
-// 		playRandomSoundFrom(MOVE_SOUNDS)
-// 	} else if (e.code == "KeyR") {
-// 		focus4.target = M4.add(focus4.target, [0, 0, 0, 1])
-// 		playRandomSoundFrom(MOVE_SOUNDS)
-// 	} else if (e.code == "KeyF") {
-// 		focus4.target = M4.add(focus4.target, [0, 0, 0, -1])
-// 		playRandomSoundFrom(MOVE_SOUNDS)
-// 		// } else if (e.code == "KeyT") {
-// 		// 	currentProjection5 = currentProjection5 == CURRENT_PROJECTION_PERSPECTIVE ? CURRENT_PROJECTION_ORTHOGONAL : CURRENT_PROJECTION_PERSPECTIVE
-// 		// } else if (e.code == "KeyG") {
-// 		// 	currentProjection4 = currentProjection4 == CURRENT_PROJECTION_PERSPECTIVE ? CURRENT_PROJECTION_ORTHOGONAL : CURRENT_PROJECTION_PERSPECTIVE
-// 	} else if (e.code == "ArrowUp") {
-// 		const offset = -1
-// 		const DISTANCE = 1.1
-// 		distance4.target *= DISTANCE ** offset
+	stop() {
+		this.audio.pause()
+		this.audio.currentTime = 0
+	}
+}
 
-// 		if (!ZOOM_SOUND.audio.loop) {
-// 			ZOOM_SOUND.audio.loop = true
-// 			ZOOM_SOUND.play()
-// 		}
-// 	} else if (e.code == "ArrowDown") {
-// 		const offset = 1
-// 		const DISTANCE = 1.1
-// 		distance4.target *= DISTANCE ** offset
+const CLICK_SOUNDS = [
+	new Sound("./Assets/opera-gx-click6.mp3"),
+	new Sound("./Assets/opera-gx-click5.mp3"),
+]
 
-// 		if (!ZOOM_SOUND.audio.loop) {
-// 			ZOOM_SOUND.audio.loop = true
-// 			ZOOM_SOUND.play()
-// 		}
-// 	} else if (e.code == "Space") {
-// 		const hash = focus4.target.toString()
-// 		if (hypervoxels.has(hash)) {
-// 			hypervoxels.delete(hash)
-// 		} else {
-// 			hypervoxels.set(hash, focus4.target)
-// 		}
-// 		CLICK_SOUNDS[1].play()
-// 	} else if (e.code == "ControlLeft") {
-// 		xy4.target = 0
-// 		yz4.target = 0
-// 		zx4.target = 0
-// 		wx4.target = 0
-// 		wy4.target = 0
-// 		wz4.target = 0
+const TAP_SOUNDS = [
+	new Sound("./Assets/opera-gx-click1.mp3"),
+	new Sound("./Assets/opera-gx-click2.mp3"),
+	new Sound("./Assets/opera-gx-click3.mp3"),
+	new Sound("./Assets/opera-gx-click4.mp3"),
+]
 
-// 		distance4.target = 2
+const MOVE_SOUNDS = [
+	new Sound("./Assets/tap-glass.mp3", 0.005),
+]
 
-// 		zeta1 = 0
-// 		zeta2 = 0
-// 		eta.target = Math.PI / 4
+const RESET_MOVE_SOUNDS = [
+	new Sound("./Assets/tap-glass-reverb.mp3", 0.027),
+]
 
-// 		playRandomSoundFrom(RESET_MOVE_SOUNDS)
-// 	} else if (e.code == "ControlRight") {
-// 		focus4.target = M4.ZERO
-// 		playRandomSoundFrom(RESET_MOVE_SOUNDS)
-// 	} else if (e.code == "ShiftLeft") {
-// 		if (!shiftedAlready) {
-// 			shiftedAlready = true
+const ZOOM_SOUND = new Sound("./Assets/scroll.mp3", 0.0)
+const DADA_SOUND = new Sound("./Assets/da-da.mp3")
+const DADA_REVERSED_SOUND = new Sound("./Assets/da-da-reversed.mp3")
+const SUCCESS_SOUND = new Sound("./Assets/success.mp3")
 
-// 			if (currentCamera == CURRENT_CAMERA_5)
-// 				CLICK_SOUNDS[0].play()
-// 		}
-// 	} else if (e.code == "Digit9") {
-// 		const snapshot = {
-// 			xy4: xy4.target,
-// 			yz4: yz4.target,
-// 			zx4: zx4.target,
-// 			wx4: wx4.target,
-// 			wy4: wy4.target,
-// 			wz4: wz4.target,
+/**
+ * @param {Sound[]} sounds
+ */
+function playRandomSoundFrom(sounds) {
+	const index = Math.floor(sounds.length * Math.random())
+	const sound = sounds[index]
+	sound.play()
+}
 
-// 			focus4: focus4.target,
-// 			distance4: distance4.target,
+let shiftedAlready = false
+let zAlready = false
+document.addEventListener('keydown', e => {
+	if (e.code == "KeyZ") {
+		if (!zAlready) {
+			zAlready = true
+			currentCamera = currentCamera == CURRENT_CAMERA_4 ? CURRENT_CAMERA_5 : CURRENT_CAMERA_4
+			SUCCESS_SOUND.play()
+			cameraDisplaySizeSpring.velocity = 50
 
-// 			zeta1,
-// 			zeta2,
-// 			eta: eta.target,
+			if (shiftedAlready && currentCamera == CURRENT_CAMERA_4) {
+				CLICK_SOUNDS[0].play()
+			}
 
-// 			hypervoxels: Array.from(hypervoxels.values()),
-// 		}
+			if (shiftedAlready && currentCamera == CURRENT_CAMERA_5) {
+				shiftedAlready = true
+				CLICK_SOUNDS[0].play()
+			}
+		}
+	} else if (e.code == "KeyH") {
+		use_hopf_coordinates = !use_hopf_coordinates
+	} else if (e.code == "KeyD") {
+		focus4.target = M4.add(focus4.target, [1, 0, 0, 0])
+		playRandomSoundFrom(MOVE_SOUNDS)
+	} else if (e.code == "KeyA") {
+		focus4.target = M4.add(focus4.target, [-1, 0, 0, 0])
+		playRandomSoundFrom(MOVE_SOUNDS)
+	} else if (e.code == "KeyW") {
+		focus4.target = M4.add(focus4.target, [0, 1, 0, 0])
+		playRandomSoundFrom(MOVE_SOUNDS)
+	} else if (e.code == "KeyS") {
+		focus4.target = M4.add(focus4.target, [0, -1, 0, 0])
+		playRandomSoundFrom(MOVE_SOUNDS)
+	} else if (e.code == "KeyE") {
+		focus4.target = M4.add(focus4.target, [0, 0, 1, 0])
+		playRandomSoundFrom(MOVE_SOUNDS)
+	} else if (e.code == "KeyQ") {
+		focus4.target = M4.add(focus4.target, [0, 0, -1, 0])
+		playRandomSoundFrom(MOVE_SOUNDS)
+	} else if (e.code == "KeyR") {
+		focus4.target = M4.add(focus4.target, [0, 0, 0, 1])
+		playRandomSoundFrom(MOVE_SOUNDS)
+	} else if (e.code == "KeyF") {
+		focus4.target = M4.add(focus4.target, [0, 0, 0, -1])
+		playRandomSoundFrom(MOVE_SOUNDS)
+		// } else if (e.code == "KeyT") {
+		// 	currentProjection5 = currentProjection5 == CURRENT_PROJECTION_PERSPECTIVE ? CURRENT_PROJECTION_ORTHOGONAL : CURRENT_PROJECTION_PERSPECTIVE
+		// } else if (e.code == "KeyG") {
+		// 	currentProjection4 = currentProjection4 == CURRENT_PROJECTION_PERSPECTIVE ? CURRENT_PROJECTION_ORTHOGONAL : CURRENT_PROJECTION_PERSPECTIVE
+	} else if (e.code == "ArrowUp") {
+		const offset = -1
+		const DISTANCE = 1.1
+		distance4.target *= DISTANCE ** offset
 
-// 		const link = document.createElement("a");
-// 		const file = new Blob([JSON.stringify(snapshot)], { type: "application/json" });
-// 		link.href = URL.createObjectURL(file);
-// 		link.download = "hypervoxel_build.json";
-// 		link.click();
-// 		URL.revokeObjectURL(link.href);
-// 	} else if (e.code == "Digit0") {
-// 		let input = document.createElement("input");
-// 		input.type = "file";
-// 		input.multiple = false;
-// 		input.accept = "application/json";
+		if (!ZOOM_SOUND.audio.loop) {
+			ZOOM_SOUND.audio.loop = true
+			ZOOM_SOUND.play()
+		}
+	} else if (e.code == "ArrowDown") {
+		const offset = 1
+		const DISTANCE = 1.1
+		distance4.target *= DISTANCE ** offset
 
-// 		input.onchange = e => {
-// 			// getting a hold of the file reference
-// 			const file = input.files[0];
+		if (!ZOOM_SOUND.audio.loop) {
+			ZOOM_SOUND.audio.loop = true
+			ZOOM_SOUND.play()
+		}
+	} else if (e.code == "Space") {
+		const hash = focus4.target.toString()
+		if (hypervoxels.has(hash)) {
+			hypervoxels.delete(hash)
+		} else {
+			hypervoxels.set(hash, focus4.target)
+		}
+		CLICK_SOUNDS[1].play()
+	} else if (e.code == "ControlLeft") {
+		xy4.target = 0
+		yz4.target = 0
+		zx4.target = 0
+		wx4.target = 0
+		wy4.target = 0
+		wz4.target = 0
 
-// 			// setting up the reader
-// 			const reader = new FileReader();
-// 			// here we tell the reader what to do when it's done reading...
-// 			reader.onload = readerEvent => {
-// 				const json = readerEvent.target.result; // this is the content!
-// 				if (typeof(json) !== "string")
-// 					throw new Error("Expected JSON")
+		distance4.target = 2
 
-// 				const snapshot = JSON.parse(json)
+		zeta1 = 0
+		zeta2 = 0
+		eta.target = Math.PI / 4
 
-// 				xy4.target = snapshot.xy4
-// 				yz4.target = snapshot.yz4
-// 				zx4.target = snapshot.zx4
-// 				wx4.target = snapshot.wx4
-// 				wy4.target = snapshot.wy4
-// 				wz4.target = snapshot.wz4
+		playRandomSoundFrom(RESET_MOVE_SOUNDS)
+	} else if (e.code == "ControlRight") {
+		focus4.target = M4.ZERO
+		playRandomSoundFrom(RESET_MOVE_SOUNDS)
+	} else if (e.code == "ShiftLeft") {
+		if (!shiftedAlready) {
+			shiftedAlready = true
 
-// 				focus4.target = snapshot.focus4
-// 				distance4.target = snapshot.distance4
+			if (currentCamera == CURRENT_CAMERA_5)
+				CLICK_SOUNDS[0].play()
+		}
+	} else if (e.code == "Digit1") {
+		renderUi = !renderUi
+		playRandomSoundFrom(CLICK_SOUNDS)
+	} else if (e.code == "Digit2") {
+		renderOriginAxes = !renderOriginAxes
+		playRandomSoundFrom(CLICK_SOUNDS)
+	} else if (e.code == "Digit3") {
+		render4DCursor = !render4DCursor
+		playRandomSoundFrom(CLICK_SOUNDS)
+	} else if (e.code == "Digit4") {
+		renderCoordinateLabels = !renderCoordinateLabels
+		playRandomSoundFrom(CLICK_SOUNDS)
+	} else if (e.code == "Digit9") {
+		const snapshot = {
+			xy4: xy4.target,
+			yz4: yz4.target,
+			zx4: zx4.target,
+			wx4: wx4.target,
+			wy4: wy4.target,
+			wz4: wz4.target,
 
-// 				zeta1 = snapshot.zeta1
-// 				zeta2 = snapshot.zeta2
-// 				eta.target = snapshot.eta
+			focus4: focus4.target,
+			distance4: distance4.target,
 
-// 				hypervoxels.clear()
-// 				for (let i in snapshot.hypervoxels) {
-// 					const position = snapshot.hypervoxels[i]
-// 					hypervoxels.set(position.toString(), position)
-// 				}
-// 			}
-// 			reader.readAsText(file, 'UTF-8');
-// 		}
-// 		input.click();
-// 	}
+			zeta1,
+			zeta2,
+			eta: eta.target,
 
-// 	KEYS_DOWN.add(e.code)
-// })
+			hypervoxels: Array.from(hypervoxels.values()),
+		}
 
-// document.addEventListener('keyup', e => {
-// 	ZOOM_SOUND.audio.loop = false
+		const link = document.createElement("a");
+		const file = new Blob([JSON.stringify(snapshot)], { type: "application/json" });
+		link.href = URL.createObjectURL(file);
+		link.download = "hypervoxel_build.json";
+		link.click();
+		URL.revokeObjectURL(link.href);
+	} else if (e.code == "Digit0") {
+		let input = document.createElement("input");
+        input.type = "file";
+        input.multiple = false;
+        input.accept = "application/json";
 
-// 	if (e.code == "KeyZ") {
-// 		zAlready = false
-// 	} else if (e.code == "ShiftLeft") {
-// 		shiftedAlready = false
+		input.onchange = e => {
+			// getting a hold of the file reference
+			const file = input.files[0];
 
-// 		if (currentCamera == CURRENT_CAMERA_5)
-// 			CLICK_SOUNDS[0].play()
-// 	}
+			// setting up the reader
+			const reader = new FileReader();
+			// here we tell the reader what to do when it's done reading...
+			reader.onload = readerEvent => {
+				const json = readerEvent.target.result; // this is the content!
+				const snapshot = JSON.parse(json)
 
-// 	KEYS_DOWN.delete(e.code)
-// })
+				xy4.target = snapshot.xy4
+				yz4.target = snapshot.yz4
+				zx4.target = snapshot.zx4
+				wx4.target = snapshot.wx4
+				wy4.target = snapshot.wy4
+				wz4.target = snapshot.wz4
 
-// document.addEventListener('mousemove', e => {
-// 	const newX = (e.offsetX - Canvas.cw / 2)
-// 	const newY = (e.offsetY - Canvas.ch / 2)
+				focus4.target = snapshot.focus4
+				distance4.target = snapshot.distance4
 
-// 	const dx = newX - lastMouse[0]
-// 	const dy = newY - lastMouse[1]
+				zeta1 = snapshot.zeta1
+				zeta2 = snapshot.zeta2
+				eta.target = snapshot.eta
 
-// 	lastMouse[0] = mouse[0]
-// 	lastMouse[1] = mouse[1]
+				hypervoxels.clear()
+				for (let i in snapshot.hypervoxels) {
+					const position = snapshot.hypervoxels[i]
+					hypervoxels.set(position.toString(), position)
+				}
+				console.log(hypervoxels)
+			}
+			reader.readAsText(file, 'UTF-8');
+		}
+		input.click();
+	}
 
-// 	mouse[0] = newX
-// 	mouse[1] = newY
+	KEYS_DOWN.add(e.code)
+})
 
-// 	if (dragging) {
-// 		const SPEED = 1
-// 		if (currentCamera == CURRENT_CAMERA_4) {
-// 			xy3.target += SPEED * dx / Canvas.min
-// 			yz3.target += SPEED * -dy / Canvas.min
+document.addEventListener('keyup', e => {
+	ZOOM_SOUND.audio.loop = false
 
-// 			// xy3.target %= 2 * Math.PI
-// 			yz3.target = Math.max(Math.min(yz3.target, Math.PI), 0)
-// 		} else {
-// 			if (KEYS_DOWN.has("ShiftLeft")) {
-// 				wx4.target += SPEED * dx / Canvas.min
-// 				wy4.target += SPEED * -dy / Canvas.min
-// 				// wx4.target %= 2 * Math.PI
-// 				// wy4.target %= 2 * Math.PI
-// 			} else {
-// 				xy4.target += SPEED * dx / Canvas.min
-// 				yz4.target -= SPEED * -dy / Canvas.min
-// 				// xy4.target %= 2 * Math.PI
-// 				// yz4.target %= 2 * Math.PI
-// 			}
+	if (e.code == "KeyZ") {
+		zAlready = false
+	} else if (e.code == "ShiftLeft") {
+		shiftedAlready = false
 
-// 			zeta1 += SPEED * dx / Canvas.min
-// 			zeta2 += SPEED * -dy / Canvas.min
-// 			// zeta1 %= 2 * Math.PI
-// 			// zeta2 %= 2 * Math.PI
-// 		}
-// 	}
-// })
+		if (currentCamera == CURRENT_CAMERA_5)
+			CLICK_SOUNDS[0].play()
+	}
 
-// document.addEventListener('wheel', e => {
-// 	const offset = Math.sign(e.deltaY)
+	KEYS_DOWN.delete(e.code)
+})
 
-// 	if (currentCamera == CURRENT_CAMERA_4) {
-// 		const DISTANCE = 1.1
-// 		distance3.target *= DISTANCE ** offset
-// 	} else {
-// 		const SPEED1 = Math.PI / 16
-// 		if (KEYS_DOWN.has("ShiftLeft")) {
-// 			wz4.target += SPEED1 * offset
-// 			// wz4.target = Math.max(Math.min(wz4.target, Math.PI), 0)
-// 		} else {
-// 			zx4.target += SPEED1 * offset
-// 			// zx4.target = Math.max(Math.min(zx4.target, Math.PI), 0)
-// 		}
+document.addEventListener('mousemove', e => {
+	const newX = (e.offsetX - Canvas.cw / 2)
+	const newY = (e.offsetY - Canvas.ch / 2)
 
-// 		const SPEED2 = Math.PI / 32
-// 		eta.target += SPEED2 * offset
-// 		eta.target = Math.max(Math.min(eta.target, Math.PI / 2), 0)
-// 	}
-// })
+	const dx = newX - lastMouse[0]
+	const dy = newY - lastMouse[1]
 
-// document.addEventListener('mousedown', e => {
-// 	Canvas.canvas.style.cursor = "all-scroll"
-// })
+	lastMouse[0] = mouse[0]
+	lastMouse[1] = mouse[1]
 
-// document.addEventListener('mouseup', e => {
-// 	Canvas.canvas.style.cursor = "default"
-// })
+	mouse[0] = newX
+	mouse[1] = newY
+
+	if (dragging) {
+		const SPEED = 1
+		if (currentCamera == CURRENT_CAMERA_4) {
+			xy3.target += SPEED * dx / Canvas.min
+			yz3.target += SPEED * -dy / Canvas.min
+
+			// xy3.target %= 2 * Math.PI
+			yz3.target = Math.max(Math.min(yz3.target, Math.PI), 0)
+		} else {
+			if (KEYS_DOWN.has("ShiftLeft")) {
+				wx4.target += SPEED * dx / Canvas.min
+				wy4.target += SPEED * -dy / Canvas.min
+				// wx4.target %= 2 * Math.PI
+				// wy4.target %= 2 * Math.PI
+			} else {
+				xy4.target += SPEED * dx / Canvas.min
+				yz4.target -= SPEED * -dy / Canvas.min
+				// xy4.target %= 2 * Math.PI
+				// yz4.target %= 2 * Math.PI
+			}
+
+			zeta1 += SPEED * dx / Canvas.min
+			zeta2 += SPEED * -dy / Canvas.min
+			// zeta1 %= 2 * Math.PI
+			// zeta2 %= 2 * Math.PI
+		}
+	}
+})
+
+document.addEventListener('wheel', e => {
+	const offset = Math.sign(e.deltaY)
+
+	if (currentCamera == CURRENT_CAMERA_4) {
+		const DISTANCE = 1.1
+		distance3.target *= DISTANCE ** offset
+	} else {
+		const SPEED1 = Math.PI / 16
+		if (KEYS_DOWN.has("ShiftLeft")) {
+			wz4.target += SPEED1 * offset
+			// wz4.target = Math.max(Math.min(wz4.target, Math.PI), 0)
+		} else {
+			zx4.target += SPEED1 * offset
+			// zx4.target = Math.max(Math.min(zx4.target, Math.PI), 0)
+		}
+
+		const SPEED2 = Math.PI / 32
+		eta.target += SPEED2 * offset
+		eta.target = Math.max(Math.min(eta.target, Math.PI / 2), 0)
+	}
+})
+
+document.addEventListener('mousedown', e => {
+	Canvas.canvas.style.cursor = "all-scroll"
+})
+
+document.addEventListener('mouseup', e => {
+	Canvas.canvas.style.cursor = "default"
+})

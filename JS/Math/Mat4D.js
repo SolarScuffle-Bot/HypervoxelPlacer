@@ -1,10 +1,14 @@
-import * as M from "./Mat.js"
 import * as M3 from "./Mat3D.js"
 
 /**
  *
- * @param {M.Vector4} u
- * @returns {M.Matrix4}
+ * @param {[number, number, number, number]} u
+ * @returns {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]}
 */
 export function rightIsoclinicQuaternion(u) {
 	const [p, q, r, s] = u
@@ -18,8 +22,13 @@ export function rightIsoclinicQuaternion(u) {
 
 /**
  *
- * @param {M.Vector4} u
- * @returns {M.Matrix4}
+ * @param {[number, number, number, number]} u
+ * @returns {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]}
 */
 export function leftIsoclinicQuaternion(u) {
 	const [a, b, c, d] = u
@@ -33,8 +42,13 @@ export function leftIsoclinicQuaternion(u) {
 
 /**
  *
- * @param {M.Vector3} position3
- * @returns {M.Matrix4}
+ * @param {[number, number, number]} position3
+ * @returns {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]}
 */
 export function translate(position3) {
 	return [
@@ -48,7 +62,12 @@ export function translate(position3) {
 /**
  *
  * @param {number} scale
- * @returns {M.Matrix4}
+ * @returns {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]}
  */
 export function dilate(scale) {
 	return [
@@ -60,7 +79,12 @@ export function dilate(scale) {
 }
 
 /**
- * @param {M.Matrix4} m
+ * @param {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]} m
  * @param {number} precision
  */
 export function print(m, precision = 0) {
@@ -78,9 +102,24 @@ export function print(m, precision = 0) {
 }
 
 /**
- * @param {M.Matrix4} a
- * @param {M.Matrix4} b
- * @returns {M.Matrix4}
+ * @param {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]} a
+ * @param {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]} b
+ * @returns {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]}
  */
 export function mul_4x4(a, b) {
 	return [
@@ -107,8 +146,18 @@ export function mul_4x4(a, b) {
 }
 
 /**
- * @param  {...M.Matrix4} args
- * @returns {M.Matrix4}
+ * @param  {...[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]} args
+ * @returns {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]}
  */
 export function mul_4x4s(...args) {
 	let m = args[args.length - 1]
@@ -118,9 +167,14 @@ export function mul_4x4s(...args) {
 }
 
 /**
-* @param {M.Matrix4} m
-* @param {M.Vector4} u
-* @returns {M.Vector4}
+* @param {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]} m
+* @param {[number, number, number, number]} u
+* @returns {[number, number, number, number]}
 */
 export function mul_4x4_4x1(m, u) {
 	return [
@@ -155,7 +209,12 @@ export function mul_mx4_4xn(a, b) {
 }
 
 /**
-* @param {M.Matrix4} a
+* @param {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]} a
 * @param {number[]} b
 * @returns {number[]}
 */
@@ -184,8 +243,18 @@ export function mul_4x4_4xns(...args) {
 }
 
 /**
-* @param {M.Matrix4} m
-* @returns {M.Matrix4}
+* @param {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]} m
+* @returns {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]}
 */
 export function inverse(m) {
 	const
@@ -209,16 +278,26 @@ export function inverse(m) {
 }
 
 /**
-* @param {M.Matrix4} m
-* @returns {M.Vector3}
+* @param {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]} m
+* @returns {[number, number, number]}
 */
 export function getPosition3(m) {
 	return [m[12], m[13], m[14]]
 }
 
 /**
-* @param {M.Matrix4} m
-* @param {M.Vector3} position3
+* @param {[
+*	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* 	number, number, number, number,
+* ]} m
+* @param {[number, number, number]} position3
 */
 export function setPosition3(m, position3) {
 	m[12] = position3[0]
@@ -227,23 +306,23 @@ export function setPosition3(m, position3) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
+ * @param {[number, number, number, number]} u
+ * @param {[number, number, number, number]} v
  */
 export function dot(u, v) {
 	return u[0] * v[0] + u[1] * v[1] + u[2] * v[2] + u[3] * v[3]
 }
 
 /**
- * @param {M.Vector4} u
+ * @param {[number, number, number, number]} u
  */
 export function mag(u) {
 	return Math.hypot(u[0], u[1], u[2], u[3])
 }
 
 /**
- * @param {M.Vector4} u
- * @returns {M.Vector4}
+ * @param {[number, number, number, number]} u
+ * @returns {[number, number, number, number]}
  */
 export function norm(u) {
 	const m = 1 / mag(u)
@@ -256,9 +335,9 @@ export function norm(u) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @returns {M.Vector4}
+ * @param {[number, number, number, number]} u
+ * @param {[number, number, number, number]} v
+ * @returns {[number, number, number, number]}
  */
 export function projnorm(u, v) {
 	const scale = dot(v, u)
@@ -271,9 +350,9 @@ export function projnorm(u, v) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @returns {M.Vector4}
+ * @param {[number, number, number, number]} u
+ * @param {[number, number, number, number]} v
+ * @returns {[number, number, number, number]}
  */
 export function proj(u, v) {
 	const scale = dot(v, u) / dot(u, u)
@@ -286,9 +365,9 @@ export function proj(u, v) {
 }
 
 /**
- * @param {M.Vector4} u
+ * @param {[number, number, number, number]} u
  * @param {number} s
- * @returns {M.Vector4}
+ * @returns {[number, number, number, number]}
  */
 export function muls(u, s) {
 	return [
@@ -300,9 +379,9 @@ export function muls(u, s) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @returns {M.Vector4}
+ * @param {[number, number, number, number]} u
+ * @param {[number, number, number, number]} v
+ * @returns {[number, number, number, number]}
  */
 export function add(u, v) {
 	return [
@@ -314,9 +393,9 @@ export function add(u, v) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @returns {M.Vector4}
+ * @param {[number, number, number, number]} u
+ * @param {[number, number, number, number]} v
+ * @returns {[number, number, number, number]}
  */
 export function sub(u, v) {
 	return [
@@ -327,10 +406,10 @@ export function sub(u, v) {
 	]
 }
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @param {M.Vector4} w
- * @returns {M.Vector4}
+ * @param {[number, number, number, number]} u
+ * @param {[number, number, number, number]} v
+ * @param {[number, number, number, number]} w
+ * @returns {[number, number, number, number]}
  */
 export function sub_2(u, v, w) {
 	return [
@@ -342,11 +421,11 @@ export function sub_2(u, v, w) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @param {M.Vector4} w
- * @param {M.Vector4} x
- * @returns {M.Vector4}
+ * @param {[number, number, number, number]} u
+ * @param {[number, number, number, number]} v
+ * @param {[number, number, number, number]} w
+ * @param {[number, number, number, number]} x
+ * @returns {[number, number, number, number]}
  */
 export function sub_3(u, v, w, x) {
 	return [
@@ -358,32 +437,36 @@ export function sub_3(u, v, w, x) {
 }
 
 /**
- * @type {M.Vector4}
+ * @type {[number, number, number, number]}
  */
 export const X = [1, 0, 0, 0]
 /**
- * @type {M.Vector4}
+ * @type {[number, number, number, number]}
  */
 export const Y = [0, 1, 0, 0]
 /**
- * @type {M.Vector4}
+ * @type {[number, number, number, number]}
  */
 export const Z = [0, 0, 1, 0]
 /**
- * @type {M.Vector4}
+ * @type {[number, number, number, number]}
  */
 export const W = [0, 0, 0, 1]
 /**
- * @type {M.Vector4}
+ * @type {[number, number, number, number]}
  */
 export const ZERO = [0, 0, 0, 0]
 /**
- * @type {M.Vector4}
+ * @type {[number, number, number, number]}
  */
 export const ONE = [1, 1, 1, 1]
 
 /**
- * @type {[M.Vector3, M.Vector3, M.Vector3]}
+ * @type {[
+ * 	[number, number, number],
+ * 	[number, number, number],
+ * 	[number, number, number]
+ * ]}
  */
 const CANDIDATE_AXES = [
 	[-1, 0, 0],
@@ -392,10 +475,15 @@ const CANDIDATE_AXES = [
 ]
 
 /**
- * @param {M.Vector3} position3
- * @param {M.Vector3} direction3
- * @param {M.Vector3} up3
- * @returns {M.Matrix4}
+ * @param {[number, number, number]} position3
+ * @param {[number, number, number]} direction3
+ * @param {[number, number, number]} up3
+ * @returns {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]}
  */
 export function lookAlong(position3, direction3, up3) {
 	let candidateHead = 0
@@ -406,7 +494,7 @@ export function lookAlong(position3, direction3, up3) {
 	const e0 = direction3
 
 	/**
-	 * @type {M.Vector3}
+	 * @type {[number, number, number]}
 	 */
 	let e1
 	do {
@@ -431,9 +519,9 @@ export function lookAlong(position3, direction3, up3) {
 }
 
 /**
- * @param {M.Vector3} here3
- * @param {M.Vector3} there3
- * @param {M.Vector3} [up3]
+ * @param {[number, number, number]} here3
+ * @param {[number, number, number]} there3
+ * @param {[number, number, number] | undefined} up3
  */
 export function lookAt(here3, there3, up3 = M3.Z) {
 	const position = here3
@@ -443,7 +531,12 @@ export function lookAt(here3, there3, up3 = M3.Z) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix4}
+ * @returns {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]}
  */
 export function rotate_xy(angle) {
 	return [
@@ -456,7 +549,12 @@ export function rotate_xy(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix4}
+ * @returns {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]}
  */
 export function rotate_yz(angle) {
 	return [
@@ -469,7 +567,12 @@ export function rotate_yz(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix4}
+ * @returns {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]}
  */
 export function rotate_zx(angle) {
 	return [
@@ -481,8 +584,17 @@ export function rotate_zx(angle) {
 }
 
 /**
- * @param {M.Matrix4} m
- * @returns {M.Matrix3}
+ * @param {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]} m
+ * @returns {[
+ *	number, number, number,
+ * 	number, number, number,
+ * 	number, number, number,
+ * ]}
  */
 export function trim_3x3(m) {
 	return [
@@ -508,8 +620,19 @@ export function trim_4xn_3xn(m) {
 }
 
 /**
- * @param {M.Matrix4} m
- * @returns {M.Matrix5}
+ * @param {[
+ *	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * 	number, number, number, number,
+ * ]} m
+ * @returns {[
+ *	number, number, number, number, number,
+ * 	number, number, number, number, number,
+ * 	number, number, number, number, number,
+ * 	number, number, number, number, number,
+ * 	number, number, number, number, number,
+ * ]}
  */
 export function expand_4x4_5x5(m) {
 	return [
