@@ -1,25 +1,27 @@
-if (!navigator.gpu) {
+export const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("Canvas"))
+
+const c_or_null = canvas.getContext("webgpu")
+if (c_or_null === null) throw new Error("No context found!")
+export const c = c_or_null
+
+export const gpu = navigator.gpu
+if (!gpu) {
     throw new Error("WebGPU not supported on this browser.")
 }
 
-export const adapter = await navigator.gpu.requestAdapter()
+const adapter = await gpu.requestAdapter()
 if (!adapter) {
   throw new Error("No appropriate GPUAdapter found.")
 }
 
-export const device = await adapter.requestDevice();
+export const device = await adapter.requestDevice()
 
-export const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("Canvas"))
-export const c = canvas.getContext("webgpu")
-
-/** @type {} */
-export const cformat = navigator.gpu.getPreferredCanvasFormat()
+const cformat = gpu.getPreferredCanvasFormat()
 c.configure({
-  device: device,
+  device,
   format: cformat,
+  alphaMode: "premultiplied",
 })
-
-export const encoder = device.createCommandEncoder()
 
 export const DEFAULT_COLOR = "#111122"
 

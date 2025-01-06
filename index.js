@@ -108,247 +108,247 @@ let CAMERA4_INVERSE
  * @param {M.Vector4} position4
  * @param {string} color
  */
-function render_filled_tesseract(position4, color) {
-	const TRANSLATE = M5.translate(position4)
-	const TESSERACT_INDICES = Vertices.TESSERACT_QUAD_INDICES
-	const TESSERACT_VERTICES = M5.mul_5x5_5xn(TRANSLATE, Vertices.TESSERACT_VERTICES5)
-	const SHOWING_INDICES = Vertices.filter_cell_indices(TESSERACT_INDICES, TRANSLATE, CAMERA5_INVERSE)
-	const VERTICES_5D = M5.mul_5x5_5xn(PROJECT_4D_TO_3D, TESSERACT_VERTICES)
-	const VERTICES_4D = M4.mul_4x4_4xn(PROJECT_3D_TO_2D, M5.trim_5xn_4xn(VERTICES_5D))
-	const VERTICES_3D = M4.trim_4xn_3xn(VERTICES_4D)
-	const sortedIndices = Vertices.sort_indices_by_depth(SHOWING_INDICES, VERTICES_3D)
-	Render.render_tesseract_quads_perspective(VERTICES_3D, sortedIndices, color)
-}
+// function render_filled_tesseract(position4, color) {
+// 	const TRANSLATE = M5.translate(position4)
+// 	const TESSERACT_INDICES = Vertices.TESSERACT_QUAD_INDICES
+// 	const TESSERACT_VERTICES = M5.mul_5x5_5xn(TRANSLATE, Vertices.TESSERACT_VERTICES5)
+// 	const SHOWING_INDICES = Vertices.filter_cell_indices(TESSERACT_INDICES, TRANSLATE, CAMERA5_INVERSE)
+// 	const VERTICES_5D = M5.mul_5x5_5xn(PROJECT_4D_TO_3D, TESSERACT_VERTICES)
+// 	const VERTICES_4D = M4.mul_4x4_4xn(PROJECT_3D_TO_2D, M5.trim_5xn_4xn(VERTICES_5D))
+// 	const VERTICES_3D = M4.trim_4xn_3xn(VERTICES_4D)
+// 	const sortedIndices = Vertices.sort_indices_by_depth(SHOWING_INDICES, VERTICES_3D)
+// 	Render.render_tesseract_quads_perspective(VERTICES_3D, sortedIndices, color)
+// }
 
 /**
  * @param {M.Vector4} position4
  */
-function draw_axes4(position4, axisLength = 1) {
-	const [x, y, z, w] = position4
+// function draw_axes4(position4, axisLength = 1) {
+// 	const [x, y, z, w] = position4
 
-	const AXIS_VERTICES = [
-		x + 0, y + 0, z + 0, w + 0, 1,
+// 	const AXIS_VERTICES = [
+// 		x + 0, y + 0, z + 0, w + 0, 1,
 
-		x + axisLength, y + 0, z + 0, w + 0, 1,
-		x + 0, y + axisLength, z + 0, w + 0, 1,
-		x + 0, y + 0, z + axisLength, w + 0, 1,
-		x + 0, y + 0, z + 0, w + axisLength, 1,
+// 		x + axisLength, y + 0, z + 0, w + 0, 1,
+// 		x + 0, y + axisLength, z + 0, w + 0, 1,
+// 		x + 0, y + 0, z + axisLength, w + 0, 1,
+// 		x + 0, y + 0, z + 0, w + axisLength, 1,
 
-		x + axisLength, y + 0.1, z + 0, w + 0, 1,
-		x + axisLength, y + 0, z + 0.1, w + 0, 1,
-		x + axisLength, y + 0, z + 0, w + 0.1, 1,
+// 		x + axisLength, y + 0.1, z + 0, w + 0, 1,
+// 		x + axisLength, y + 0, z + 0.1, w + 0, 1,
+// 		x + axisLength, y + 0, z + 0, w + 0.1, 1,
 
-		x + 0.1, y + axisLength, z + 0, w + 0, 1,
-		x + 0, y + axisLength, z + 0.1, w + 0, 1,
-		x + 0, y + axisLength, z + 0, w + 0.1, 1,
+// 		x + 0.1, y + axisLength, z + 0, w + 0, 1,
+// 		x + 0, y + axisLength, z + 0.1, w + 0, 1,
+// 		x + 0, y + axisLength, z + 0, w + 0.1, 1,
 
-		x + 0.1, y + 0, z + axisLength, w + 0, 1,
-		x + 0, y + 0.1, z + axisLength, w + 0, 1,
-		x + 0, y + 0, z + axisLength, w + 0.1, 1,
+// 		x + 0.1, y + 0, z + axisLength, w + 0, 1,
+// 		x + 0, y + 0.1, z + axisLength, w + 0, 1,
+// 		x + 0, y + 0, z + axisLength, w + 0.1, 1,
 
-		x + 0.1, y + 0, z + 0, w + axisLength, 1,
-		x + 0, y + 0.1, z + 0, w + axisLength, 1,
-		x + 0, y + 0, z + 0.1, w + axisLength, 1,
-	]
+// 		x + 0.1, y + 0, z + 0, w + axisLength, 1,
+// 		x + 0, y + 0.1, z + 0, w + axisLength, 1,
+// 		x + 0, y + 0, z + 0.1, w + axisLength, 1,
+// 	]
 
-	const AXIS_INDICES = [
-		0, 1,
-		0, 2,
-		0, 3,
-		0, 4,
+// 	const AXIS_INDICES = [
+// 		0, 1,
+// 		0, 2,
+// 		0, 3,
+// 		0, 4,
 
-		1, 5,
-		1, 6,
-		1, 7,
+// 		1, 5,
+// 		1, 6,
+// 		1, 7,
 
-		2, 8,
-		2, 9,
-		2, 10,
+// 		2, 8,
+// 		2, 9,
+// 		2, 10,
 
-		3, 11,
-		3, 12,
-		3, 13,
-	]
+// 		3, 11,
+// 		3, 12,
+// 		3, 13,
+// 	]
 
-	const AXIS_LINE_COLORS = [
-		"#F00",
-		"#0F0",
-		"#00F",
-		"#FF0",
+// 	const AXIS_LINE_COLORS = [
+// 		"#F00",
+// 		"#0F0",
+// 		"#00F",
+// 		"#FF0",
 
-		"#0F0",
-		"#00F",
-		"#FF0",
+// 		"#0F0",
+// 		"#00F",
+// 		"#FF0",
 
-		"#F00",
-		"#00F",
-		"#FF0",
+// 		"#F00",
+// 		"#00F",
+// 		"#FF0",
 
-		"#F00",
-		"#0F0",
-		"#FF0",
+// 		"#F00",
+// 		"#0F0",
+// 		"#FF0",
 
-		"#F00",
-		"#0F0",
-		"#00F",
-	]
+// 		"#F00",
+// 		"#0F0",
+// 		"#00F",
+// 	]
 
-	const axes4d = M5.trim_5xn_4xn(M5.mul_5x5_5xn(PROJECT_4D_TO_3D, AXIS_VERTICES))
-	const axes3d = M4.trim_4xn_3xn(M4.mul_4x4_4xn(PROJECT_3D_TO_2D, axes4d))
-	const sortedIndices = Vertices.sort_indices_by_depth(AXIS_INDICES, axes3d)
-	Render.render_lines(axes3d, sortedIndices, AXIS_LINE_COLORS)
+// 	const axes4d = M5.trim_5xn_4xn(M5.mul_5x5_5xn(PROJECT_4D_TO_3D, AXIS_VERTICES))
+// 	const axes3d = M4.trim_4xn_3xn(M4.mul_4x4_4xn(PROJECT_3D_TO_2D, axes4d))
+// 	const sortedIndices = Vertices.sort_indices_by_depth(AXIS_INDICES, axes3d)
+// 	Render.render_lines(axes3d, sortedIndices, AXIS_LINE_COLORS)
 
-	if (Ui.renderCoordinateLabels) {
-		Render.render_spatial_text("X", [axes3d[3], axes3d[4], axes3d[5]], 24, "#F00", "center", "bottom")
-		Render.render_spatial_text("Y", [axes3d[6], axes3d[7], axes3d[8]], 24, "#0F0", "center", "bottom")
-		Render.render_spatial_text("Z", [axes3d[9], axes3d[10], axes3d[11]], 24, "#00F", "center", "bottom")
-		Render.render_spatial_text("W", [axes3d[12], axes3d[13], axes3d[14]], 24, "#FF0", "center", "bottom")
-	}
-}
+// 	if (Ui.renderCoordinateLabels) {
+// 		Render.render_spatial_text("X", [axes3d[3], axes3d[4], axes3d[5]], 24, "#F00", "center", "bottom")
+// 		Render.render_spatial_text("Y", [axes3d[6], axes3d[7], axes3d[8]], 24, "#0F0", "center", "bottom")
+// 		Render.render_spatial_text("Z", [axes3d[9], axes3d[10], axes3d[11]], 24, "#00F", "center", "bottom")
+// 		Render.render_spatial_text("W", [axes3d[12], axes3d[13], axes3d[14]], 24, "#FF0", "center", "bottom")
+// 	}
+// }
 
 let t = 0
 /**
  * @param {number} dt
  */
 function frame(dt) {
-	{
-		const distance4d = -GameState.distance4.position
-		if (GameState.use_hopf_coordinates) {
-			const etaPosition = GameState.eta.position
-			CAMERA5 = M5.lookAt([
-				distance4d * Math.cos(GameState.zeta1) * Math.sin(etaPosition),
-				distance4d * Math.sin(GameState.zeta1) * Math.sin(etaPosition),
-				distance4d * Math.cos(GameState.zeta2) * Math.cos(etaPosition),
-				distance4d * Math.sin(GameState.zeta2) * Math.cos(etaPosition),
-			], M4.ZERO)
-		} else {
-			CAMERA5 = M5.mul_5x5s(
-				M5.translate(GameState.focus4.position),
-				M5.rotate_xy(GameState.xy4.position),
-				M5.rotate_yz(GameState.yz4.position),
-				M5.rotate_zx(GameState.zx4.position),
-				M5.rotate_wz(GameState.wz4.position),
-				M5.rotate_wy(GameState.wy4.position),
-				M5.rotate_wx(GameState.wx4.position),
-				M5.lookAt([distance4d, distance4d, distance4d, distance4d], M4.ZERO)
-			)
-		}
+	// {
+	// 	const distance4d = -GameState.distance4.position
+	// 	if (GameState.use_hopf_coordinates) {
+	// 		const etaPosition = GameState.eta.position
+	// 		CAMERA5 = M5.lookAt([
+	// 			distance4d * Math.cos(GameState.zeta1) * Math.sin(etaPosition),
+	// 			distance4d * Math.sin(GameState.zeta1) * Math.sin(etaPosition),
+	// 			distance4d * Math.cos(GameState.zeta2) * Math.cos(etaPosition),
+	// 			distance4d * Math.sin(GameState.zeta2) * Math.cos(etaPosition),
+	// 		], M4.ZERO)
+	// 	} else {
+	// 		CAMERA5 = M5.mul_5x5s(
+	// 			M5.translate(GameState.focus4.position),
+	// 			M5.rotate_xy(GameState.xy4.position),
+	// 			M5.rotate_yz(GameState.yz4.position),
+	// 			M5.rotate_zx(GameState.zx4.position),
+	// 			M5.rotate_wz(GameState.wz4.position),
+	// 			M5.rotate_wy(GameState.wy4.position),
+	// 			M5.rotate_wx(GameState.wx4.position),
+	// 			M5.lookAt([distance4d, distance4d, distance4d, distance4d], M4.ZERO)
+	// 		)
+	// 	}
 
-		const distance3d = GameState.distance3.position
-		CAMERA4 = M4.mul_4x4s(
-			M4.rotate_xy(GameState.xy3.position),
-			M4.rotate_yz(GameState.yz3.position),
-			M4.lookAt([0, 0, distance3d], M3.ZERO)
-		)
+	// 	const distance3d = GameState.distance3.position
+	// 	CAMERA4 = M4.mul_4x4s(
+	// 		M4.rotate_xy(GameState.xy3.position),
+	// 		M4.rotate_yz(GameState.yz3.position),
+	// 		M4.lookAt([0, 0, distance3d], M3.ZERO)
+	// 	)
 
-		CAMERA5_INVERSE = M5.inverse(CAMERA5)
-		CAMERA4_INVERSE = M4.inverse(CAMERA4)
+	// 	CAMERA5_INVERSE = M5.inverse(CAMERA5)
+	// 	CAMERA4_INVERSE = M4.inverse(CAMERA4)
 
-		PROJECT_3D_TO_2D = M4.mul_4x4(GameState.currentProjection4 == GameState.CURRENT_PROJECTION_PERSPECTIVE ? PERSPECTIVE4 : ORTHOGONAL4, CAMERA4_INVERSE)
-		PROJECT_4D_TO_3D = M5.mul_5x5(GameState.currentProjection5 == GameState.CURRENT_PROJECTION_PERSPECTIVE ? PERSPECTIVE5 : ORTHOGONAL5, CAMERA5_INVERSE)
-	}
+	// 	PROJECT_3D_TO_2D = M4.mul_4x4(GameState.currentProjection4 == GameState.CURRENT_PROJECTION_PERSPECTIVE ? PERSPECTIVE4 : ORTHOGONAL4, CAMERA4_INVERSE)
+	// 	PROJECT_4D_TO_3D = M5.mul_5x5(GameState.currentProjection5 == GameState.CURRENT_PROJECTION_PERSPECTIVE ? PERSPECTIVE5 : ORTHOGONAL5, CAMERA5_INVERSE)
+	// }
 
-	if (Ui.renderOriginAxes) {
-		const AXIS_LENGTH = 1
-		const AXIS_VERTICES = [
-			0, 0, 0, 1,
+	// if (Ui.renderOriginAxes) {
+	// 	const AXIS_LENGTH = 1
+	// 	const AXIS_VERTICES = [
+	// 		0, 0, 0, 1,
 
-			AXIS_LENGTH, 0, 0, 1,
-			AXIS_LENGTH, 0.1, 0, 1,
-			AXIS_LENGTH, 0, 0.1, 1,
+	// 		AXIS_LENGTH, 0, 0, 1,
+	// 		AXIS_LENGTH, 0.1, 0, 1,
+	// 		AXIS_LENGTH, 0, 0.1, 1,
 
-			0, AXIS_LENGTH, 0, 1,
-			0.1, AXIS_LENGTH, 0, 1,
-			0, AXIS_LENGTH, 0.1, 1,
+	// 		0, AXIS_LENGTH, 0, 1,
+	// 		0.1, AXIS_LENGTH, 0, 1,
+	// 		0, AXIS_LENGTH, 0.1, 1,
 
-			0, 0, AXIS_LENGTH, 1,
-			0.1, 0, AXIS_LENGTH, 1,
-			0, 0.1, AXIS_LENGTH, 1,
-		]
+	// 		0, 0, AXIS_LENGTH, 1,
+	// 		0.1, 0, AXIS_LENGTH, 1,
+	// 		0, 0.1, AXIS_LENGTH, 1,
+	// 	]
 
-		const AXIS_INDICES = [
-			0, 1,
-			1, 2,
-			1, 3,
+	// 	const AXIS_INDICES = [
+	// 		0, 1,
+	// 		1, 2,
+	// 		1, 3,
 
-			0, 4,
-			4, 5,
-			4, 6,
+	// 		0, 4,
+	// 		4, 5,
+	// 		4, 6,
 
-			0, 7,
-			7, 8,
-			7, 9,
-		]
+	// 		0, 7,
+	// 		7, 8,
+	// 		7, 9,
+	// 	]
 
-		const AXIS_LINE_COLORS = [
-			"#F00",
-			"#F00",
-			"#F00",
-			"#0F0",
-			"#0F0",
-			"#0F0",
-			"#00F",
-			"#00F",
-			"#00F",
-		]
+	// 	const AXIS_LINE_COLORS = [
+	// 		"#F00",
+	// 		"#F00",
+	// 		"#F00",
+	// 		"#0F0",
+	// 		"#0F0",
+	// 		"#0F0",
+	// 		"#00F",
+	// 		"#00F",
+	// 		"#00F",
+	// 	]
 
-		const projectedAxes = M4.trim_4xn_3xn(M4.mul_4x4_4xns(PROJECT_3D_TO_2D, M4.translate([-1, -1, 0]), AXIS_VERTICES))
-		const sortedIndices = Vertices.sort_indices_by_depth(AXIS_INDICES, projectedAxes)
-		Render.render_lines(projectedAxes, sortedIndices, AXIS_LINE_COLORS)
+	// 	const projectedAxes = M4.trim_4xn_3xn(M4.mul_4x4_4xns(PROJECT_3D_TO_2D, M4.translate([-1, -1, 0]), AXIS_VERTICES))
+	// 	const sortedIndices = Vertices.sort_indices_by_depth(AXIS_INDICES, projectedAxes)
+	// 	Render.render_lines(projectedAxes, sortedIndices, AXIS_LINE_COLORS)
 
-		draw_axes4(M4.ZERO, 1)
-	}
+	// 	draw_axes4(M4.ZERO, 1)
+	// }
 
 
-	if (Ui.render4DCursor) {
-		const AXIS_VERTICES = [
-			+0.5, +0, +0, +0, 1,
-			-0.5, +0, +0, +0, 1,
+	// if (Ui.render4DCursor) {
+	// 	const AXIS_VERTICES = [
+	// 		+0.5, +0, +0, +0, 1,
+	// 		-0.5, +0, +0, +0, 1,
 
-			+0, +0.5, +0, +0, 1,
-			+0, -0.5, +0, +0, 1,
+	// 		+0, +0.5, +0, +0, 1,
+	// 		+0, -0.5, +0, +0, 1,
 
-			+0, +0, +0.5, +0, 1,
-			+0, +0, -0.5, +0, 1,
+	// 		+0, +0, +0.5, +0, 1,
+	// 		+0, +0, -0.5, +0, 1,
 
-			+0, +0, +0, +0.5, 1,
-			+0, +0, +0, -0.5, 1,
-		]
+	// 		+0, +0, +0, +0.5, 1,
+	// 		+0, +0, +0, -0.5, 1,
+	// 	]
 
-		const AXIS_INDICES = [
-			0, 1,
-			2, 3,
-			4, 5,
-			6, 7,
-		]
+	// 	const AXIS_INDICES = [
+	// 		0, 1,
+	// 		2, 3,
+	// 		4, 5,
+	// 		6, 7,
+	// 	]
 
-		const LINE_COLORS = [
-			"#F99",
-			"#9F9",
-			"#99F",
-			"#FF9",
-		]
+	// 	const LINE_COLORS = [
+	// 		"#F99",
+	// 		"#9F9",
+	// 		"#99F",
+	// 		"#FF9",
+	// 	]
 
-		const axes4d = M5.trim_5xn_4xn(M5.mul_5x5_5xns(PROJECT_4D_TO_3D, M5.translate(GameState.focus4.target), AXIS_VERTICES))
-		const axes3d = M4.trim_4xn_3xn(M4.mul_4x4_4xn(PROJECT_3D_TO_2D, axes4d))
-		const sortedIndices = Vertices.sort_indices_by_depth(AXIS_INDICES, axes3d)
-		Render.render_lines(axes3d, sortedIndices, LINE_COLORS)
-	} else {
-		draw_axes4(GameState.focus4.target, 10)
-	}
+	// 	const axes4d = M5.trim_5xn_4xn(M5.mul_5x5_5xns(PROJECT_4D_TO_3D, M5.translate(GameState.focus4.target), AXIS_VERTICES))
+	// 	const axes3d = M4.trim_4xn_3xn(M4.mul_4x4_4xn(PROJECT_3D_TO_2D, axes4d))
+	// 	const sortedIndices = Vertices.sort_indices_by_depth(AXIS_INDICES, axes3d)
+	// 	Render.render_lines(axes3d, sortedIndices, LINE_COLORS)
+	// } else {
+	// 	draw_axes4(GameState.focus4.target, 10)
+	// }
 
-	// TODO: We have reached the point where individual pixels need to be Z-indexed, which is currently not possible with Canvas.
-	// This means we need to properly move to using WebGPU now, which means the giant rewrite we were trying to avoid is here.
-	// That said, it will be nice to finally get it out of the way, but this will take the entire weekend or longer since we are newbies.
-	for (const [hash, data] of GameState.hypervoxels) {
-		render_filled_tesseract(data.position, data.color)
-	}
+	// // TODO: We have reached the point where individual pixels need to be Z-indexed, which is currently not possible with Canvas.
+	// // This means we need to properly move to using WebGPU now, which means the giant rewrite we were trying to avoid is here.
+	// // That said, it will be nice to finally get it out of the way, but this will take the entire weekend or longer since we are newbies.
+	// for (const [hash, data] of GameState.hypervoxels) {
+	// 	render_filled_tesseract(data.position, data.color)
+	// }
 
-	if (Ui.renderUi) {
-		Ui.renderAll()
-	}
+	// if (Ui.renderUi) {
+	// 	Ui.renderAll()
+	// }
 
-	t += dt
+	// t += dt
 }
 
 const LOOP = true
@@ -360,6 +360,7 @@ if (LOOP) {
 		// console.clear()
 
 		Canvas.update(Canvas.DEFAULT_COLOR)
+		Render.render()
 
 		frame(delta_time)
 		Spring.updateAllSprings(delta_time)
