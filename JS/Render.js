@@ -1,106 +1,232 @@
 import * as M from "./Math/Mat.js"
 import * as Canvas from "./Canvas.js"
-import * as Vertices from "./Vertices.js"
 
 const C = Canvas.c
 const Device = Canvas.device
 const GPU = Canvas.gpu
+const Queue = Device.queue
 
-// const encoder = Device.createCommandEncoder()
+const EXPECTED_MAX_TESSERACT_COUNT = 1e4
+const U8 = 1
+const I16 = 2
 
-// const pass = encoder.beginRenderPass({
-//     colorAttachments: [{
-//        view: C.getCurrentTexture().createView(),
-//        loadOp: "clear",
-//        clearValue: [17 / 255, 17 / 255, 34 / 255, 1],
-//        storeOp: "store",
-//     }]
-// })
+/**
+ * @param {number} instanceBytes
+ * @param {number} maxCount
+ * @param {number} usage
+ */
+function new_staticMeshInstanceBuffer(instanceBytes, maxCount, usage) {
+	const maxBytes = maxCount * instanceBytes
+	const gpuBuffer = Device.createBuffer({
+		size: maxBytes,
+		usage: usage,
+	})
+	const buffer = new ArrayBuffer(maxCount * instanceBytes)
+	const view = new DataView(buffer)
+	return {
+		gpuBuffer,
+		buffer,
+		view,
+		length: 0,
+	}
+}
 
-// pass.end()
+/**
+ * @typedef {ReturnType<new_staticMeshInstanceBuffer>} StaticMeshInstanceBuffer
+ */
 
-// const commandBuffer = encoder.finish()
+/**
+ * @param {StaticMeshInstanceBuffer} buffer
+ */
+function commit_buffer(buffer) {
+	Queue.writeBuffer(buffer.gpuBuffer, 0, buffer.buffer, 0, buffer.buffer.byteLength)
+}
+
+/**
+ * @param {StaticMeshInstanceBuffer} buffer
+ */
+function reset_buffer(buffer) {
+	buffer.length = 0
+}
+
+const TESSERACT_COLOR = new_staticMeshInstanceBuffer(4 * U8, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.VERTEX)
+const TESSERACT_OPAQUE = new_staticMeshInstanceBuffer(4 * I16, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.VERTEX)
+const TESSERACT_OPAQUE_INDICES = new_staticMeshInstanceBuffer(288 * U8, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST)
+
+const TESSERACT_TRANSPARENT = new_staticMeshInstanceBuffer(4 * I16, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.VERTEX)
+
+export function reset_tesseracts() {
+	reset_buffer(TESSERACT_COLOR)
+	reset_buffer(TESSERACT_OPAQUE)
+	reset_buffer(TESSERACT_TRANSPARENT)
+}
+
+export function commit_tesseracts() {
+	commit_buffer(TESSERACT_OPAQUE)
+	commit_buffer(TESSERACT_OPAQUE)
+	commit_buffer(TESSERACT_TRANSPARENT)
+}
+
+/**
+ * @param {M.Vector4} position
+ * @param {M.Vector4} color
+ */
+export function push_tesseract(position, color) {
+	const alpha = color[3]
+	if (alpha == 0) return
+
+	{
+		const view = TESSERACT_COLOR.view
+		const i = 4 * TESSERACT_COLOR.length++
+		view.setUint8(i + 0, color[0])
+		view.setUint8(i + 1, color[1])
+		view.setUint8(i + 2, color[2])
+		view.setUint8(i + 3, alpha)
+	}
+	{
+		const buffer = alpha == 1 ? TESSERACT_OPAQUE : TESSERACT_TRANSPARENT
+		const view = buffer.view
+		const i = 8 * buffer.length++
+		view.setInt16(i + 0, position[0], true)
+		view.setInt16(i + 2, position[1], true)
+		view.setInt16(i + 4, position[2], true)
+		view.setInt16(i + 6, position[3], true)
+	}
+}
 
 // Device.queue.submit([commandBuffer])
 // 2. Load/compile WGSL:
 const vertexShaderModule = Device.createShaderModule({
-  code: await fetch('../Shaders/Tesseract.wgsl').then(res => res.text())
+	code: await fetch('../Shaders/Tesseract.wgsl').then(res => res.text())
 })
 
 // 3. Create a pipeline:
 const opaquePipeline = Device.createRenderPipeline({
-  layout: "auto", // or create a pipeline layout if you have uniforms
-  vertex: {
-    module: vertexShaderModule,
-    entryPoint: "vertex_main",
-  },
-  fragment: {
-    module: vertexShaderModule,   // or a separate fragment shader
-    entryPoint: "fragment_main",  // if you have a separate function
-    targets: [{
-      format: GPU.getPreferredCanvasFormat(),
-    }],
-  },
-  primitive: {
-    topology: "triangle-list",
-  },
+	layout: "auto", // or create a pipeline layout if you have uniforms
+	vertex: {
+		module: vertexShaderModule,
+		entryPoint: "vertex_main",
+		buffers: [
+			{
+				arrayStride: 4 * U8,
+				stepMode: "instance",
+				attributes: [
+					// 4 i16 (8 bytes)
+					{
+						shaderLocation: 0,
+						offset: 0,
+						// "snorm16x4", "sint16x4", or something depending on how you interpret them in the shader
+						format: "unorm8x4",
+					},
+				],
+			},
+			{
+				arrayStride: 4 * I16,
+				stepMode: "instance",
+				attributes: [
+					// 4 i16 (8 bytes)
+					{
+						shaderLocation: 1,
+						offset: 0,
+						// "snorm16x4", "sint16x4", or something depending on how you interpret them in the shader
+						format: "sint16x4"
+					},
+				],
+			},
+		],
+	},
+	fragment: {
+		module: vertexShaderModule,   // or a separate fragment shader
+		entryPoint: "fragment_main",  // if you have a separate function
+		targets: [{
+			format: GPU.getPreferredCanvasFormat(),
+		}],
+	},
+	primitive: {
+		topology: "triangle-list",
+	},
 })
 
 const transparentPipeline = Device.createRenderPipeline({
-  layout: "auto", // or create a pipeline layout if you have uniforms
-  depthStencil: {
-    format: "depth24plus",
-    depthWriteEnabled: false, // <--- important for transparency
-    depthCompare: "less"
-  },
-  vertex: {
-    module: vertexShaderModule,
-    entryPoint: "vertex_main",
-  },
-  fragment: {
-    module: vertexShaderModule,   // or a separate fragment shader
-    entryPoint: "fragment_main",  // if you have a separate function
-    targets: [{
-      format: GPU.getPreferredCanvasFormat(), // or your swap chain format
-      blend: {
-        color: {
-          srcFactor: "src-alpha",
-          dstFactor: "one-minus-src-alpha",
-          operation: "add"
-        },
-        alpha: {
-          srcFactor: "one",
-          dstFactor: "one-minus-src-alpha",
-          operation: "add"
-        },
-      },
-    }],
-  },
-  primitive: {
-    topology: "triangle-list",
-  },
+	layout: "auto", // or create a pipeline layout if you have uniforms
+	depthStencil: {
+		format: "depth24plus",
+		depthWriteEnabled: false, // <--- important for transparency
+		depthCompare: "less",
+	},
+	vertex: {
+		module: vertexShaderModule,
+		entryPoint: "vertex_main",
+		buffers: [{
+			arrayStride: BYTES_PER_TESSERACT, // 12 bytes per instance
+			stepMode: "instance",
+			attributes: [
+				// 4 i16 (8 bytes)
+				{
+					shaderLocation: 0,
+					offset: 0,
+					// "snorm16x4", "sint16x4", or something depending on how you interpret them in the shader
+					format: "sint16x4",
+				},
+				// 4 u8 (4 bytes)
+				{
+					shaderLocation: 1,
+					offset: 8,
+					format: "unorm8x4", // or "uint8x4", etc.
+				},
+			]
+		}],
+	},
+	fragment: {
+		module: vertexShaderModule,   // or a separate fragment shader
+		entryPoint: "fragment_main",  // if you have a separate function
+		targets: [{
+			format: GPU.getPreferredCanvasFormat(), // or your swap chain format
+			blend: {
+				color: {
+					srcFactor: "src-alpha",
+					dstFactor: "one-minus-src-alpha",
+					operation: "add",
+				},
+				alpha: {
+					srcFactor: "one",
+					dstFactor: "one-minus-src-alpha",
+					operation: "add",
+				},
+			},
+		}],
+	},
+	primitive: {
+		topology: "triangle-list",
+	},
 })
 
 export function render() {
-  const encoder = Device.createCommandEncoder();
-  const currentTexture = C.getCurrentTexture();
-  const renderPass = encoder.beginRenderPass({
-    colorAttachments: [{
-      view: currentTexture.createView(),
-      clearValue: [17 / 255, 17 / 255, 34 / 255, 1],
-      loadOp: "clear",
-      storeOp: "store",
-    }],
-  })
+	const encoder = Device.createCommandEncoder();
+	const currentTexture = C.getCurrentTexture();
 
-  renderPass.setPipeline(opaquePipeline)
-  // No vertex buffer or index buffer set, since geometry is in the shader.
+	encoder.beginComputePass({
 
-  // The vertex shader references TESS_INDICES.length => 36 in the example
-  renderPass.draw(288, 1, 0, 0)
+	})
+	const renderPass = encoder.beginRenderPass({
+		colorAttachments: [{
+			view: currentTexture.createView(),
+			clearValue: [17 / 255, 17 / 255, 34 / 255, 1],
+			loadOp: "clear",
+			storeOp: "store",
+		}],
+	})
 
-  renderPass.end()
-  Device.queue.submit([encoder.finish()])
+	renderPass.setPipeline(opaquePipeline)
+	renderPass.setVertexBuffer(0, );
+	renderPass.draw(288 * TESSERACT_OPAQUE.length, 1, 0, 0)
+
+	renderPass.setPipeline(transparentPipeline)
+	renderPass.draw(288 * TESSERACT_TRANSPARENT.length, 1, 0, 0)
+
+	renderPass.end()
+
+	Device.queue.submit([encoder.finish()])
 }
 
 // export function render_tesseract_quads_orthographic(style, vertices4, indices) {

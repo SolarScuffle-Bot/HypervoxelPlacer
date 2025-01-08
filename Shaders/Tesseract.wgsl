@@ -18,7 +18,7 @@ const VERTICES4 = array(
 );
 
 const INDICES4 = array<u32, 288>(
-    // -X Normal Cell (6 quads -> 12 triangles)
+  // -X Normal Cell (6 quads -> 12 triangles)
   // Quad (1,9,13,5) => Tri (1,9,13) , (1,13,5)
   1,9,13, 1,13,5,
   3,7,15, 3,15,11,
@@ -83,6 +83,11 @@ const INDICES4 = array<u32, 288>(
   1,3,7, 1,7,5,
   2,0,4, 2,4,6,
 );
+
+@group(0) @binding(0) var<storage, read_write> data: array<f32>;
+
+@compute @workgroup_size(64, 1, 1)
+fn
 
 @vertex
 fn vertex_main(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f {
