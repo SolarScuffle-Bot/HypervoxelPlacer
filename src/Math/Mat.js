@@ -21,6 +21,10 @@
  * 	number, number, number, number, number,
  * 	number, number, number, number, number,
  * ]} Matrix5
+ * @typedef {[number, number, number, number]} RGBA
+ * @typedef {[number, number, number, number]} HSLA
+ * @typedef {[number, number, number]} RGB
+ * @typedef {[number, number, number]} HSL
  */
 
 /**

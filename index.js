@@ -1,4 +1,3 @@
-import * as M from "./JS/Math/Mat.js"
 import * as Canvas from "./JS/Canvas.js"
 import * as M5 from "./JS/Math/Mat5D.js"
 import * as M4 from "./JS/Math/Mat4D.js"
@@ -11,7 +10,7 @@ import * as Ui from "./JS/Ui.js"
 
 const C = Canvas.c
 
-// let CAMERA_5 = M.look_along_5([0, 0, 0, -10, 1], [0, 0, 0, 1, 1])
+// let CAMERA_5 = look_along_5([0, 0, 0, -10, 1], [0, 0, 0, 1, 1])
 // const PROJECTION_5 = (() => {
 // 	const FOV = Math.PI / 2
 // 	const S = 1 / Math.tan(FOV / 2)
@@ -28,7 +27,7 @@ const C = Canvas.c
 
 /**
  * 5×5 perspective for 4D -> "clip" with +W forward
- * @type {M.Matrix5}
+ * @type {Matrix5}
 */
 const PERSPECTIVE5 = (() => {
 	const FOV = Math.PI / 2
@@ -51,7 +50,7 @@ const PERSPECTIVE5 = (() => {
 
 /**
  * 4×4 perspective for 3D -> "clip" with +Z forward
- * @type {M.Matrix4}
+ * @type {Matrix4}
 */
 const PERSPECTIVE4 = (() => {
 	const FOV = Math.PI / 2
@@ -71,7 +70,7 @@ const PERSPECTIVE4 = (() => {
 })()
 
 /**
- * @type {M.Matrix4}
+ * @type {Matrix4}
  */
 const ORTHOGONAL4 = [
 	1, 0, 0, 0,
@@ -81,7 +80,7 @@ const ORTHOGONAL4 = [
 ]
 
 /**
- * @type {M.Matrix5}
+ * @type {Matrix5}
  */
 const ORTHOGONAL5 = [
 	1, 0, 0, 0, 0,
@@ -91,21 +90,21 @@ const ORTHOGONAL5 = [
 	0, 0, 0, 0, 1
 ]
 
-/** @type {M.Matrix5} */
+/** @type {Matrix5} */
 let PROJECT_4D_TO_3D
-/** @type {M.Matrix4} */
+/** @type {Matrix4} */
 let PROJECT_3D_TO_2D
-/** @type {M.Matrix5} */
+/** @type {Matrix5} */
 let CAMERA5
-/** @type {M.Matrix4} */
+/** @type {Matrix4} */
 let CAMERA4
-/** @type {M.Matrix5} */
+/** @type {Matrix5} */
 let CAMERA5_INVERSE
-/** @type {M.Matrix4} */
+/** @type {Matrix4} */
 let CAMERA4_INVERSE
 
 /**
- * @param {M.Vector4} position4
+ * @param {Vector4} position4
  * @param {string} color
  */
 // function render_filled_tesseract(position4, color) {
@@ -121,7 +120,7 @@ let CAMERA4_INVERSE
 // }
 
 /**
- * @param {M.Vector4} position4
+ * @param {Vector4} position4
  */
 // function draw_axes4(position4, axisLength = 1) {
 // 	const [x, y, z, w] = position4

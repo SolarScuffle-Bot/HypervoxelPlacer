@@ -1,10 +1,55 @@
-import * as M from "./Mat.js"
 import * as M3 from "./Mat3D.js"
+
+
+/**
+* @param {Matrix4} m
+* @returns {Vector3}
+*/
+export function getPosition3(m) {
+	return [m[12], m[13], m[14]]
+}
+
+/**
+* @param {Matrix4} m
+* @param {Vector3} position3
+*/
+export function setPosition3(m, position3) {
+	m[12] = position3[0]
+	m[13] = position3[1]
+	m[14] = position3[2]
+}
 
 /**
  *
- * @param {M.Vector4} u
- * @returns {M.Matrix4}
+ * @param {Matrix4} m
+ * @returns {Vector3}
+ */
+export function getRight3(m) {
+	return [m[0], m[1], m[2]]
+}
+
+/**
+ *
+ * @param {Matrix4} m
+ * @returns {Vector3}
+ */
+export function getForward3(m) {
+	return [m[5], m[6], m[7]]
+}
+
+/**
+ *
+ * @param {Matrix4} m
+ * @returns {Vector3}
+ */
+export function getUp3(m) {
+	return [m[10], m[11], m[12]]
+}
+
+/**
+ *
+ * @param {Vector4} u
+ * @returns {Matrix4}
 */
 export function rightIsoclinicQuaternion(u) {
 	const [p, q, r, s] = u
@@ -18,8 +63,8 @@ export function rightIsoclinicQuaternion(u) {
 
 /**
  *
- * @param {M.Vector4} u
- * @returns {M.Matrix4}
+ * @param {Vector4} u
+ * @returns {Matrix4}
 */
 export function leftIsoclinicQuaternion(u) {
 	const [a, b, c, d] = u
@@ -33,8 +78,8 @@ export function leftIsoclinicQuaternion(u) {
 
 /**
  *
- * @param {M.Vector3} position3
- * @returns {M.Matrix4}
+ * @param {Vector3} position3
+ * @returns {Matrix4}
 */
 export function translate(position3) {
 	return [
@@ -48,7 +93,7 @@ export function translate(position3) {
 /**
  *
  * @param {number} scale
- * @returns {M.Matrix4}
+ * @returns {Matrix4}
  */
 export function dilate(scale) {
 	return [
@@ -60,7 +105,7 @@ export function dilate(scale) {
 }
 
 /**
- * @param {M.Matrix4} m
+ * @param {Matrix4} m
  * @param {number} precision
  */
 export function print(m, precision = 0) {
@@ -78,9 +123,9 @@ export function print(m, precision = 0) {
 }
 
 /**
- * @param {M.Matrix4} a
- * @param {M.Matrix4} b
- * @returns {M.Matrix4}
+ * @param {Matrix4} a
+ * @param {Matrix4} b
+ * @returns {Matrix4}
  */
 export function mul_4x4(a, b) {
 	return [
@@ -107,8 +152,8 @@ export function mul_4x4(a, b) {
 }
 
 /**
- * @param  {...M.Matrix4} args
- * @returns {M.Matrix4}
+ * @param  {...Matrix4} args
+ * @returns {Matrix4}
  */
 export function mul_4x4s(...args) {
 	let m = args[args.length - 1]
@@ -118,9 +163,9 @@ export function mul_4x4s(...args) {
 }
 
 /**
-* @param {M.Matrix4} m
-* @param {M.Vector4} u
-* @returns {M.Vector4}
+* @param {Matrix4} m
+* @param {Vector4} u
+* @returns {Vector4}
 */
 export function mul_4x4_4x1(m, u) {
 	return [
@@ -155,7 +200,7 @@ export function mul_mx4_4xn(a, b) {
 }
 
 /**
-* @param {M.Matrix4} a
+* @param {Matrix4} a
 * @param {number[]} b
 * @returns {number[]}
 */
@@ -176,16 +221,20 @@ export function mul_4x4_4xn(a, b) {
 	return mat
 }
 
+/**
+ * @param  {...number[]} args
+ * @returns
+ */
 export function mul_4x4_4xns(...args) {
 	let m = args[args.length - 1]
 	for (let i = args.length - 2; i >= 0; i--)
-		m = mul_4x4_4xn(args[i], m)
+		m = mul_4x4_4xn(/** @type {Matrix4} */(args[i]), m)
 	return m
 }
 
 /**
-* @param {M.Matrix4} m
-* @returns {M.Matrix4}
+* @param {Matrix4} m
+* @returns {Matrix4}
 */
 export function inverse(m) {
 	const
@@ -209,41 +258,23 @@ export function inverse(m) {
 }
 
 /**
-* @param {M.Matrix4} m
-* @returns {M.Vector3}
-*/
-export function getPosition3(m) {
-	return [m[12], m[13], m[14]]
-}
-
-/**
-* @param {M.Matrix4} m
-* @param {M.Vector3} position3
-*/
-export function setPosition3(m, position3) {
-	m[12] = position3[0]
-	m[13] = position3[1]
-	m[14] = position3[2]
-}
-
-/**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
+ * @param {Vector4} u
+ * @param {Vector4} v
  */
 export function dot(u, v) {
 	return u[0] * v[0] + u[1] * v[1] + u[2] * v[2] + u[3] * v[3]
 }
 
 /**
- * @param {M.Vector4} u
+ * @param {Vector4} u
  */
 export function mag(u) {
 	return Math.hypot(u[0], u[1], u[2], u[3])
 }
 
 /**
- * @param {M.Vector4} u
- * @returns {M.Vector4}
+ * @param {Vector4} u
+ * @returns {Vector4}
  */
 export function norm(u) {
 	const m = 1 / mag(u)
@@ -256,9 +287,9 @@ export function norm(u) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @returns {M.Vector4}
+ * @param {Vector4} u
+ * @param {Vector4} v
+ * @returns {Vector4}
  */
 export function projnorm(u, v) {
 	const scale = dot(v, u)
@@ -271,9 +302,9 @@ export function projnorm(u, v) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @returns {M.Vector4}
+ * @param {Vector4} u
+ * @param {Vector4} v
+ * @returns {Vector4}
  */
 export function proj(u, v) {
 	const scale = dot(v, u) / dot(u, u)
@@ -286,9 +317,9 @@ export function proj(u, v) {
 }
 
 /**
- * @param {M.Vector4} u
+ * @param {Vector4} u
  * @param {number} s
- * @returns {M.Vector4}
+ * @returns {Vector4}
  */
 export function muls(u, s) {
 	return [
@@ -300,9 +331,9 @@ export function muls(u, s) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @returns {M.Vector4}
+ * @param {Vector4} u
+ * @param {Vector4} v
+ * @returns {Vector4}
  */
 export function add(u, v) {
 	return [
@@ -314,9 +345,9 @@ export function add(u, v) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @returns {M.Vector4}
+ * @param {Vector4} u
+ * @param {Vector4} v
+ * @returns {Vector4}
  */
 export function sub(u, v) {
 	return [
@@ -327,10 +358,10 @@ export function sub(u, v) {
 	]
 }
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @param {M.Vector4} w
- * @returns {M.Vector4}
+ * @param {Vector4} u
+ * @param {Vector4} v
+ * @param {Vector4} w
+ * @returns {Vector4}
  */
 export function sub_2(u, v, w) {
 	return [
@@ -342,11 +373,11 @@ export function sub_2(u, v, w) {
 }
 
 /**
- * @param {M.Vector4} u
- * @param {M.Vector4} v
- * @param {M.Vector4} w
- * @param {M.Vector4} x
- * @returns {M.Vector4}
+ * @param {Vector4} u
+ * @param {Vector4} v
+ * @param {Vector4} w
+ * @param {Vector4} x
+ * @returns {Vector4}
  */
 export function sub_3(u, v, w, x) {
 	return [
@@ -358,32 +389,32 @@ export function sub_3(u, v, w, x) {
 }
 
 /**
- * @type {M.Vector4}
+ * @type {Vector4}
  */
 export const X = [1, 0, 0, 0]
 /**
- * @type {M.Vector4}
+ * @type {Vector4}
  */
 export const Y = [0, 1, 0, 0]
 /**
- * @type {M.Vector4}
+ * @type {Vector4}
  */
 export const Z = [0, 0, 1, 0]
 /**
- * @type {M.Vector4}
+ * @type {Vector4}
  */
 export const W = [0, 0, 0, 1]
 /**
- * @type {M.Vector4}
+ * @type {Vector4}
  */
 export const ZERO = [0, 0, 0, 0]
 /**
- * @type {M.Vector4}
+ * @type {Vector4}
  */
 export const ONE = [1, 1, 1, 1]
 
 /**
- * @type {[M.Vector3, M.Vector3, M.Vector3]}
+ * @type {[Vector3, Vector3, Vector3]}
  */
 const CANDIDATE_AXES = [
 	[-1, 0, 0],
@@ -392,10 +423,10 @@ const CANDIDATE_AXES = [
 ]
 
 /**
- * @param {M.Vector3} position3
- * @param {M.Vector3} direction3
- * @param {M.Vector3} up3
- * @returns {M.Matrix4}
+ * @param {Vector3} position3
+ * @param {Vector3} direction3
+ * @param {Vector3} up3
+ * @returns {Matrix4}
  */
 export function lookAlong(position3, direction3, up3) {
 	let candidateHead = 0
@@ -406,7 +437,7 @@ export function lookAlong(position3, direction3, up3) {
 	const e0 = direction3
 
 	/**
-	 * @type {M.Vector3}
+	 * @type {Vector3}
 	 */
 	let e1
 	do {
@@ -431,9 +462,9 @@ export function lookAlong(position3, direction3, up3) {
 }
 
 /**
- * @param {M.Vector3} here3
- * @param {M.Vector3} there3
- * @param {M.Vector3} [up3]
+ * @param {Vector3} here3
+ * @param {Vector3} there3
+ * @param {Vector3} [up3]
  */
 export function lookAt(here3, there3, up3 = M3.Z) {
 	const position = here3
@@ -443,7 +474,7 @@ export function lookAt(here3, there3, up3 = M3.Z) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix4}
+ * @returns {Matrix4}
  */
 export function rotate_xy(angle) {
 	return [
@@ -456,7 +487,7 @@ export function rotate_xy(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix4}
+ * @returns {Matrix4}
  */
 export function rotate_yz(angle) {
 	return [
@@ -469,7 +500,7 @@ export function rotate_yz(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix4}
+ * @returns {Matrix4}
  */
 export function rotate_zx(angle) {
 	return [
@@ -481,8 +512,8 @@ export function rotate_zx(angle) {
 }
 
 /**
- * @param {M.Matrix4} m
- * @returns {M.Matrix3}
+ * @param {Matrix4} m
+ * @returns {Matrix3}
  */
 export function trim_3x3(m) {
 	return [
@@ -508,8 +539,8 @@ export function trim_4xn_3xn(m) {
 }
 
 /**
- * @param {M.Matrix4} m
- * @returns {M.Matrix5}
+ * @param {Matrix4} m
+ * @returns {Matrix5}
  */
 export function expand_4x4_5x5(m) {
 	return [

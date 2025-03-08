@@ -1,4 +1,3 @@
-import * as M from "./Math/Mat.js"
 import * as Canvas from "./Canvas.js"
 
 /**
@@ -201,12 +200,12 @@ export const connect_mousedown = get_mouse_connect(mousedown_callbacks)
 export const connect_mouseup = get_mouse_connect(mouseup_callbacks)
 
 /**
- * @type {M.Vector2}
+ * @type {Vector2}
  */
 export let mouse = [0, 0]
 
 /**
- * @type {M.Vector2}
+ * @type {Vector2}
  */
 export let lastMouse = [0, 0]
 

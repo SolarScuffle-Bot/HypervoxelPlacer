@@ -1,4 +1,3 @@
-import * as M from "./Math/Mat.js"
 import * as Spring from "./Math/Spring.js"
 import * as Canvas from "./Canvas.js"
 import * as M4 from "./Math/Mat4D.js"
@@ -8,7 +7,7 @@ import * as Ui from "./Ui.js"
 
 /**
  * @typedef {{
- *  position: M.Vector4,
+ *  position: Vector4,
  *  color: string,
  * }} HypervoxelData
 */
@@ -223,7 +222,8 @@ Input.connect_keydownonce(e => {
     if (hypervoxels.has(hash)) {
         remove_hypervoxel(hash)
     } else {
-        const color = Ui.alpha_slider.color(Ui.get_slider_color_alpha(Ui.alpha_slider))
+        const [h, s, l, a] = [Ui.sliderHue, Ui.sliderSaturation, Ui.sliderLightness]
+        const
         const data = {
             position: focus4.target,
             color,
@@ -270,6 +270,9 @@ Input.connect_keydownonce(e => {
     load_state()
 }, "Digit0")
 
+/**
+ * @type {(() => void) | null}
+ */
 let dragging = null
 function disconnect_dragging() {
     if (dragging === null) return

@@ -1,10 +1,55 @@
-import * as M from "./Math/Mat.js"
-import * as Canvas from "./Canvas.js"
+import * as M5 from "../Math/Mat5D.js"
+import * as M4 from "../Math/Mat4D.js"
+import * as Canvas from "../Canvas.js"
 
 const C = Canvas.c
 const Device = Canvas.device
 const GPU = Canvas.gpu
 const Queue = Device.queue
+
+/** @typedef {{position: Vector4, rgbau8: number}} TesseractInstance */
+
+/** @type {TesseractInstance[]} */
+const TRANSPARENT_TESSERACT_LIST = []
+/** @type {TesseractInstance[]} */
+const OPAQUE_TESSERACT_LIST = []
+
+/**
+ * @param {number} ru8
+ * @param {number} gu8
+ * @param {number} bu8
+ * @param {number} au8
+ */
+function compress_color(ru8, gu8, bu8, au8) {
+	return au8 << 24 + gu8 << 16 + bu8 << 8 + ru8
+}
+
+/**
+ * @param {Vector4} position
+ * @param {RGBA} rgba
+*/
+export function push_tesseract(position, rgba) {
+	const [r, g, b, a] = rgba
+	const au8 = Math.round(a * 255)
+	if (au8 === 0) return undefined
+
+	const bu8 = Math.round(b * 255)
+	const gu8 = Math.round(g * 255)
+	const ru8 = Math.round(r * 255)
+
+	const rgbau8 = compress_color(ru8, gu8, bu8, au8)
+
+	const instance = {
+		position,
+		rgbau8,
+	}
+
+	if (au8 === 255) {
+		OPAQUE_TESSERACT_LIST.push(instance)
+	} else {
+		TRANSPARENT_TESSERACT_LIST.push(instance)
+	}
+}
 
 const EXPECTED_MAX_TESSERACT_COUNT = 1e4
 const U8 = 1
@@ -49,55 +94,203 @@ function reset_buffer(buffer) {
 	buffer.length = 0
 }
 
-const TESSERACT_COLOR = new_staticMeshInstanceBuffer(4 * U8, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.VERTEX)
-const TESSERACT_OPAQUE = new_staticMeshInstanceBuffer(4 * I16, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.VERTEX)
-const TESSERACT_OPAQUE_INDICES = new_staticMeshInstanceBuffer(288 * U8, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST)
-
-const TESSERACT_TRANSPARENT = new_staticMeshInstanceBuffer(4 * I16, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.VERTEX)
-
-export function reset_tesseracts() {
-	reset_buffer(TESSERACT_COLOR)
-	reset_buffer(TESSERACT_OPAQUE)
-	reset_buffer(TESSERACT_TRANSPARENT)
-}
+const OPAQUE_TESSERACT_BUFFER = new_staticMeshInstanceBuffer(4 * I16 + 4 * U8, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST)
+const TRANSPARENT_TESSERACT_BUFFER = new_staticMeshInstanceBuffer(4 * I16 + 4 * U8, EXPECTED_MAX_TESSERACT_COUNT, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST)
 
 export function commit_tesseracts() {
-	commit_buffer(TESSERACT_OPAQUE)
-	commit_buffer(TESSERACT_OPAQUE)
-	commit_buffer(TESSERACT_TRANSPARENT)
+	for (const buffer of [OPAQUE_TESSERACT_BUFFER, TRANSPARENT_TESSERACT_BUFFER]) {
+		const view = buffer.view
+		for (let i = 0; i < OPAQUE_TESSERACT_LIST.length; i++) {
+			const instance = OPAQUE_TESSERACT_LIST[i]
+			const j = 12 * buffer.length++
+			view.setInt16(j + 0, instance.position[0], true)
+			view.setInt16(j + 2, instance.position[1], true)
+			view.setInt16(j + 4, instance.position[2], true)
+			view.setInt16(j + 6, instance.position[3], true)
+			view.setUint32(j + 8, instance.rgbau8, true)
+		}
+	}
 }
 
-/**
- * @param {M.Vector4} position
- * @param {M.Vector4} color
- */
-export function push_tesseract(position, color) {
-	const alpha = color[3]
-	if (alpha == 0) return
+export function reset_tesseracts() {
+	reset_buffer(OPAQUE_TESSERACT_BUFFER)
+	reset_buffer(TRANSPARENT_TESSERACT_BUFFER)
+}
 
-	{
-		const view = TESSERACT_COLOR.view
-		const i = 4 * TESSERACT_COLOR.length++
-		view.setUint8(i + 0, color[0])
-		view.setUint8(i + 1, color[1])
-		view.setUint8(i + 2, color[2])
-		view.setUint8(i + 3, alpha)
+const INDICES4 = [
+	// -X Normal Cell (6 quads -> 12 triangles)
+	// Quad (1,9,13,5) => Tri (1,9,13) , (1,13,5)
+	1, 9, 13, 1, 13, 5,
+	3, 7, 15, 3, 15, 11,
+	9, 11, 15, 9, 15, 13,
+	3, 1, 5, 3, 5, 7,
+	7, 5, 13, 7, 13, 15,
+	1, 3, 11, 1, 11, 9,
+
+	// X Normal Cell
+	0, 8, 12, 0, 12, 4,
+	2, 6, 14, 2, 14, 10,
+	8, 10, 14, 8, 14, 12,
+	2, 0, 4, 2, 4, 6,
+	6, 4, 12, 6, 12, 14,
+	0, 2, 10, 0, 10, 8,
+
+	// -Y Normal Cell
+	6, 2, 10, 6, 10, 14,
+	3, 7, 15, 3, 15, 11,
+	10, 11, 15, 10, 15, 14,
+	3, 2, 6, 3, 6, 7,
+	7, 6, 14, 7, 14, 15,
+	2, 3, 11, 2, 11, 10,
+
+	// Y Normal Cell
+	4, 0, 8, 4, 8, 12,
+	1, 5, 13, 1, 13, 9,
+	8, 9, 13, 8, 13, 12,
+	1, 0, 4, 1, 4, 5,
+	5, 4, 12, 5, 12, 13,
+	0, 1, 9, 0, 9, 8,
+
+	// -Z Normal Cell
+	4, 5, 7, 4, 7, 6,
+	13, 12, 14, 13, 14, 15,
+	5, 4, 12, 5, 12, 13,
+	6, 7, 15, 6, 15, 14,
+	7, 5, 13, 7, 13, 15,
+	4, 6, 14, 4, 14, 12,
+
+	// Z Normal Cell
+	0, 1, 3, 0, 3, 2,
+	9, 8, 10, 9, 10, 11,
+	1, 0, 8, 1, 8, 9,
+	2, 3, 11, 2, 11, 10,
+	3, 1, 9, 3, 9, 11,
+	0, 2, 10, 0, 10, 8,
+
+	// -W Normal Cell
+	9, 8, 10, 9, 10, 11,
+	12, 13, 15, 12, 15, 14,
+	9, 11, 15, 9, 15, 13,
+	10, 8, 12, 10, 12, 14,
+	8, 9, 13, 8, 13, 12,
+	11, 10, 14, 11, 14, 15,
+
+	// W Normal Cell
+	1, 0, 2, 1, 2, 3,
+	4, 5, 7, 4, 7, 6,
+	0, 1, 5, 0, 5, 4,
+	3, 2, 6, 3, 6, 7,
+	1, 3, 7, 1, 7, 5,
+	2, 0, 4, 2, 4, 6,
+]
+
+{
+	// Assume the following variables are defined and available:
+	//   device         : the GPU device
+	//   dataBuffer     : GPUBuffer containing our padded data (length m)
+	//   m              : total padded length (a power of two)
+	//   blockSize      : size of each block (e.g. 1024)
+	//   blockSortModule: compiled WGSL module from blockSort.wgsl
+	//   mergeModule    : compiled WGSL module from merge.wgsl
+	//   pipelineLayout : the pipeline layout that matches the bind groups used in both shaders
+	//
+	// We assume uniform buffers are created for each stage (and can be updated via mapped ranges).
+
+	const blockSortModule = Device.createShaderModule({
+		code: await fetch('./BlockSort.wgsl').then(res => res.text())
+	})
+
+	const mergeModule = Device.createShaderModule({
+		code: await fetch('./BlockSort.wgsl').then(res => res.text())
+	})
+
+	// Create compute pipelines.
+	const blockSortPipeline = Device.createComputePipeline({
+		layout: pipelineLayout,
+		compute: { module: blockSortModule, entryPoint: "main" },
+	});
+	const mergePipeline = Device.createComputePipeline({
+		layout: pipelineLayout,
+		compute: { module: mergeModule, entryPoint: "main" },
+	});
+
+	// Create uniform buffers for block sort and merge stages.
+	// (Uniform buffers must have appropriate size and usage flags.)
+	const blockParamsBuffer = Device.createBuffer({
+		size: 8, // two u32 values (blockOffset, blockSize)
+		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+	});
+	const mergeParamsBuffer = Device.createBuffer({
+		size: 8, // two u32 values (regionSize, m)
+		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+	});
+
+	// Create bind groups (assuming binding group 0 is used in both shaders).
+	const blockSortBindGroup = Device.createBindGroup({
+		layout: blockSortPipeline.getBindGroupLayout(0),
+		entries: [
+			{ binding: 0, resource: { buffer: dataBuffer } },
+			{ binding: 1, resource: { buffer: blockParamsBuffer } },
+		],
+	});
+	const mergeBindGroup = Device.createBindGroup({
+		layout: mergePipeline.getBindGroupLayout(0),
+		entries: [
+			{ binding: 0, resource: { buffer: dataBuffer } },
+			{ binding: 1, resource: { buffer: mergeParamsBuffer } },
+		],
+	});
+
+	// Command encoder for the entire sort.
+	const commandEncoder = Device.createCommandEncoder();
+
+	// --- Phase 1: Block-Level Sort ---
+	// Process each block independently. You can either dispatch one workgroup per block
+	// in separate passes or combine multiple blocks into a single dispatch if they share a workgroup.
+	// Here we dispatch one compute pass per block.
+	const numBlocks = m / blockSize;
+	for (let blockIndex = 0; blockIndex < numBlocks; blockIndex++) {
+		// Update the block uniform buffer with the starting offset and block size.
+		// (Assume updateBuffer is a helper that writes a Uint32Array to the GPU buffer.)
+		updateBuffer(Device, blockParamsBuffer, new Uint32Array([blockIndex * blockSize, blockSize]));
+
+		const passEncoder = commandEncoder.beginComputePass();
+		passEncoder.setPipeline(blockSortPipeline);
+		passEncoder.setBindGroup(0, blockSortBindGroup);
+		// Each pass handles one block; workgroup size is BLOCK_SIZE so we dispatch one workgroup.
+		passEncoder.dispatchWorkgroups(1);
+		passEncoder.end();
 	}
-	{
-		const buffer = alpha == 1 ? TESSERACT_OPAQUE : TESSERACT_TRANSPARENT
-		const view = buffer.view
-		const i = 8 * buffer.length++
-		view.setInt16(i + 0, position[0], true)
-		view.setInt16(i + 2, position[1], true)
-		view.setInt16(i + 4, position[2], true)
-		view.setInt16(i + 6, position[3], true)
+
+	// --- Phase 2: Global Merge ---
+	// In the first merge pass, we merge pairs of sorted blocks so that the region size is blockSize * 2.
+	// In subsequent passes the region size doubles until it reaches m.
+	let regionSize = blockSize * 2;
+	while (regionSize <= m) {
+		const numRegions = m / regionSize;
+		// Update the merge uniform buffer.
+		updateBuffer(Device, mergeParamsBuffer, new Uint32Array([regionSize, m]));
+
+		const passEncoder = commandEncoder.beginComputePass();
+		passEncoder.setPipeline(mergePipeline);
+		passEncoder.setBindGroup(0, mergeBindGroup);
+		// Dispatch one workgroup per merge region.
+		// The merge shader’s workgroup_size is set to MAX_REGION_SIZE; adjust if needed.
+		passEncoder.dispatchWorkgroups(numRegions);
+		passEncoder.end();
+
+		regionSize *= 2;
 	}
+
+	// Submit the command buffer. After this, the sorted data remains in dataBuffer.
+	Device.queue.submit([commandEncoder.finish()]);
+
 }
 
 // Device.queue.submit([commandBuffer])
 // 2. Load/compile WGSL:
 const vertexShaderModule = Device.createShaderModule({
-	code: await fetch('../Shaders/Tesseract.wgsl').then(res => res.text())
+	code: await fetch('./Tesseract.wgsl').then(res => res.text())
 })
 
 // 3. Create a pipeline:
@@ -218,7 +411,7 @@ export function render() {
 	})
 
 	renderPass.setPipeline(opaquePipeline)
-	renderPass.setVertexBuffer(0, );
+	renderPass.setVertexBuffer(0,);
 	renderPass.draw(288 * TESSERACT_OPAQUE.length, 1, 0, 0)
 
 	renderPass.setPipeline(transparentPipeline)
@@ -285,7 +478,7 @@ export function render() {
 
 // /**
 //  * @param {string} text
-//  * @param {M.Vector3} position3
+//  * @param {Vector3} position3
 //  * @param {number} size
 //  * @param {string} color
 //  * @param {CanvasTextAlign} textAlign
@@ -452,7 +645,7 @@ export function render() {
 //  * @param {number} y1
 //  * @param {number} x2
 //  * @param {number} y2
-//  * @returns {?M.Vector4}
+//  * @returns {?Vector4}
 //  */
 // function cohenSutherlandClip(x1, y1, x2, y2) {
 // 	// Compute region codes for P1, P2

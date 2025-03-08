@@ -1,9 +1,8 @@
-import * as M from "./Mat.js"
 import * as M4 from "./Mat4D.js"
 
 /**
  * @param {number} x
- * @returns {M.Matrix5}
+ * @returns {Matrix5}
  */
 export function diagonal(x) {
 	return [
@@ -16,14 +15,14 @@ export function diagonal(x) {
 }
 
 /**
- * @type {M.Matrix5}
+ * @type {Matrix5}
  */
 export const IDENTITY = diagonal(1)
 
 /**
  *
- * @param {M.Matrix5} m
- * @returns {M.Vector4}
+ * @param {Matrix5} m
+ * @returns {Vector4}
  */
 export function getPosition4(m) {
 	return [m[20], m[21], m[22], m[23]]
@@ -31,8 +30,8 @@ export function getPosition4(m) {
 
 /**
  *
- * @param {M.Matrix5} m
- * @param {M.Vector4} position4
+ * @param {Matrix5} m
+ * @param {Vector4} position4
  */
 export function setPosition4(m, position4) {
 	m[20] = position4[0]
@@ -43,8 +42,8 @@ export function setPosition4(m, position4) {
 
 /**
  *
- * @param {M.Matrix5} m
- * @returns {M.Vector4}
+ * @param {Matrix5} m
+ * @returns {Vector4}
  */
 export function getRight4(m) {
 	return [m[0], m[1], m[2], m[3]]
@@ -52,8 +51,8 @@ export function getRight4(m) {
 
 /**
  *
- * @param {M.Matrix5} m
- * @returns {M.Vector4}
+ * @param {Matrix5} m
+ * @returns {Vector4}
  */
 export function getForward4(m) {
 	return [m[5], m[6], m[7], m[8]]
@@ -61,8 +60,8 @@ export function getForward4(m) {
 
 /**
  *
- * @param {M.Matrix5} m
- * @returns {M.Vector4}
+ * @param {Matrix5} m
+ * @returns {Vector4}
  */
 export function getUp4(m) {
 	return [m[10], m[11], m[12], m[13]]
@@ -70,16 +69,16 @@ export function getUp4(m) {
 
 /**
  *
- * @param {M.Matrix5} m
- * @returns {M.Vector4}
+ * @param {Matrix5} m
+ * @returns {Vector4}
  */
 export function getAna4(m) {
 	return [m[15], m[16], m[17], m[18]]
 }
 
 /**
- * @param {M.Vector4} position4
- * @returns {M.Matrix5}
+ * @param {Vector4} position4
+ * @returns {Matrix5}
  */
 export function translate(position4) {
 	return [
@@ -92,8 +91,8 @@ export function translate(position4) {
 }
 
 /**
- * @param {M.Vector4} scale4
- * @returns {M.Matrix5}
+ * @param {Vector4} scale4
+ * @returns {Matrix5}
  */
 export function dilate(scale4) {
 	return [
@@ -107,7 +106,7 @@ export function dilate(scale4) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix5}
+ * @returns {Matrix5}
  */
 export function rotate_xy(angle) {
 	return [
@@ -121,7 +120,7 @@ export function rotate_xy(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix5}
+ * @returns {Matrix5}
  */
 export function rotate_yz(angle) {
 	return [
@@ -135,7 +134,7 @@ export function rotate_yz(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix5}
+ * @returns {Matrix5}
  */
 export function rotate_zx(angle) {
 	return [
@@ -149,7 +148,7 @@ export function rotate_zx(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix5}
+ * @returns {Matrix5}
  */
 export function rotate_wy(angle) {
 	return [
@@ -163,7 +162,7 @@ export function rotate_wy(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix5}
+ * @returns {Matrix5}
  */
 export function rotate_wx(angle) {
 	return [
@@ -177,7 +176,7 @@ export function rotate_wx(angle) {
 
 /**
  * @param {number} angle
- * @returns {M.Matrix5}
+ * @returns {Matrix5}
  */
 export function rotate_wz(angle) {
 	return [
@@ -190,7 +189,7 @@ export function rotate_wz(angle) {
 }
 
 /**
- * @param {M.Matrix5} m
+ * @param {Matrix5} m
 * @param {number} precision
  */
 export function print(m, precision = 0) {
@@ -208,9 +207,9 @@ export function print(m, precision = 0) {
 }
 
 /**
-* @param {M.Matrix5} a
-* @param {M.Matrix5} b
-* @returns {M.Matrix5}
+* @param {Matrix5} a
+* @param {Matrix5} b
+* @returns {Matrix5}
 */
 export function mul_5x5(a, b) {
 	return [
@@ -247,8 +246,8 @@ export function mul_5x5(a, b) {
 }
 
 /**
- * @param  {...M.Matrix5} args
- * @returns {M.Matrix5}
+ * @param  {...Matrix5} args
+ * @returns {Matrix5}
  */
 export function mul_5x5s(...args) {
 	let m = args[args.length - 1]
@@ -258,8 +257,8 @@ export function mul_5x5s(...args) {
 }
 
 /**
-* @param  {M.Matrix5} m
-* @param {M.Vector5} v
+* @param  {Matrix5} m
+* @param {Vector5} v
 */
 export function mul_5x5_5x1(m, v) {
 	return [
@@ -296,7 +295,7 @@ export function mul_mx5_5xn(a, b) {
 }
 
 /**
- * @param {M.Matrix5} a
+ * @param {Matrix5} a
  * @param {number[]} b
  * @returns {number[]}
  */
@@ -331,8 +330,8 @@ export function mul_5x5_5xns(...args) {
 }
 
 /**
-* @param {M.Matrix5} m
-* @returns {M.Matrix5}
+* @param {Matrix5} m
+* @returns {Matrix5}
 */
 export function inverse(m) {
 	const [
@@ -414,36 +413,36 @@ export function inverse(m) {
 */
 
 /**
- * @type {M.Vector5}
+ * @type {Vector5}
  */
 export const X = [1, 0, 0, 0, 0]
 /**
- * @type {M.Vector5}
+ * @type {Vector5}
  */
 export const Y = [0, 1, 0, 0, 0]
 /**
- * @type {M.Vector5}
+ * @type {Vector5}
  */
 export const Z = [0, 0, 1, 0, 0]
 /**
- * @type {M.Vector5}
+ * @type {Vector5}
  */
 export const W = [0, 0, 0, 1, 0]
 /**
- * @type {M.Vector5}
+ * @type {Vector5}
  */
 export const V = [0, 0, 0, 0, 1]
 /**
- * @type {M.Vector5}
+ * @type {Vector5}
  */
 export const ZERO = [0, 0, 0, 0, 0]
 /**
- * @type {M.Vector5}
+ * @type {Vector5}
  */
 export const ONE = [1, 1, 1, 1, 1]
 
 /**
- * @type {[M.Vector4, M.Vector4, M.Vector4, M.Vector4]}
+ * @type {[Vector4, Vector4, Vector4, Vector4]}
  */
 const CANDIDATE_AXES = [
 	[1, 0, 0, 0],
@@ -454,11 +453,11 @@ const CANDIDATE_AXES = [
 
 /**
  Assumes `direction`, `ana`, and `up` are normalized
- * @param {M.Vector4} position4
- * @param {M.Vector4} direction4
- * @param {M.Vector4} [ana4]
- * @param {M.Vector4} [up4]
- * @returns {M.Matrix5}
+ * @param {Vector4} position4
+ * @param {Vector4} direction4
+ * @param {Vector4} [ana4]
+ * @param {Vector4} [up4]
+ * @returns {Matrix5}
  */
 export function lookAlong(position4, direction4, ana4, up4) {
 	let candidateHead = 0
@@ -501,11 +500,11 @@ export function lookAlong(position4, direction4, ana4, up4) {
 
 /**
  Assumes `ana`, and `up` are normalized
- * @param {M.Vector4} here4
- * @param {M.Vector4} there4
- * @param {M.Vector4} [ana4]
- * @param {M.Vector4} [up4]
- * @returns {M.Matrix5}
+ * @param {Vector4} here4
+ * @param {Vector4} there4
+ * @param {Vector4} [ana4]
+ * @param {Vector4} [up4]
+ * @returns {Matrix5}
  */
 export function lookAt(here4, there4, ana4, up4) {
 	const position = here4
@@ -514,8 +513,8 @@ export function lookAt(here4, there4, ana4, up4) {
 }
 
 /**
- * @param {M.Matrix5} m
- * @returns {M.Matrix4}
+ * @param {Matrix5} m
+ * @returns {Matrix4}
  */
 export function trim_4x4(m) {
 	return [
@@ -615,9 +614,9 @@ function runTests() {
 
 	// Test 1: direction along X, trivial position
 	(function () {
-		/** @type {M.Vector4} */
+		/** @type {Vector4} */
 		const pos = [0, 0, 0, 0];
-		/** @type {M.Vector4} */
+		/** @type {Vector4} */
 		const dir = [1, 0, 0, 0]; // normalized
 		const result = lookAlong(pos, dir);
 		const mat = toMatrix5x5(result);
@@ -628,9 +627,9 @@ function runTests() {
 
 	// Test 2: direction diagonal, random position
 	(function () {
-		/** @type {M.Vector4} */
+		/** @type {Vector4} */
 		const pos = [1, 2, 3, 4];
-		/** @type {M.Vector4} */
+		/** @type {Vector4} */
 		const dir = M4.norm([1, 1, 1, 1]);
 		// Normalize it
 
@@ -643,14 +642,14 @@ function runTests() {
 
 	// Test 3: direction near W, custom 'ana' and 'up'
 	(function () {
-		/** @type {M.Vector4} */
+		/** @type {Vector4} */
 		const pos = [5, 5, 5, 5];
 		// direction ~ W
-		/** @type {M.Vector4} */
+		/** @type {Vector4} */
 		const dir = M4.norm([0.01, 0.01, 0.0, 1.0]);
 
 		const customAna = M4.norm([0, 0, 1, 1]); // arbitrary
-		/** @type {M.Vector4} */
+		/** @type {Vector4} */
 		const customUp = [1, 0, 0, 0]; // arbitrary
 
 		const result = lookAlong(pos, dir, customAna, customUp);
@@ -663,7 +662,7 @@ function runTests() {
 	// Test 4: random directions a few times
 	(function () {
 		for (let t = 0; t < 3; t++) {
-			/** @type {M.Vector4} */
+			/** @type {Vector4} */
 			const pos = [Math.random(), Math.random(), Math.random(), Math.random()];
 			const dir = M4.norm([Math.random(), Math.random(), Math.random(), Math.random()]);
 
